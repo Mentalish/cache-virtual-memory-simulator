@@ -2,27 +2,28 @@
 #include "print.h"
 
 
-
 void printHeader(int teamNumber) {
     printf("Cache Simulator - CS 3853 - Team 12%d\n", teamNumber);
 }
 
-void printTraceFiles(char traceFiles[][100], int numFiles) {
+void printTraceFiles(Parameters *params) {
     printf("Trace File(s):\n");
-    for (int i = 0; i < numFiles; i++) {
-        printf("%s\n", traceFiles[i]);
+    for (int i = 0; i < params->files.numFiles; i++) {
+        printf("%s\n", params->files.files[i].fileName);
     }
 }
 
-void printCacheInput(CacheInput input) {
+void printCacheInput(Parameters *params) {
     printf("***** Cache Input Parameters *****\n");
-    printf("Cache Size: %d KB\n", input.cacheSizeKB);
-    printf("Block Size: %d bytes\n", input.blockSize);
-    printf("Associativity: %d\n", input.associativity);
-    printf("Replacement Policy: %s\n", input.replacementPolicy);
-    printf("Physical Memory: %d MB\n", input.physicalMemoryMB);
-    printf("Percent Memory Used by System: %.1f%%\n", input.percentUsed);
-    printf("Instructions / Time Slice: %d\n", input.instructionsPerSlice);
+    printf("Cache Size: %d KB\n", params->cacheSize);
+    printf("Block Size: %d bytes\n", params->blockSize);
+    printf("Associativity: %d\n", params->associativity);
+    printf("Replacement Policy: %s\n",
+           getReplacementPolicyString(params->replacementPolicy));
+    printf("Physical Memory: %d MB\n", params->physicalMemory);
+    printf("Percent Memory Used by System: %d%%\n",
+           params->physicalMemoryOS);
+    printf("Instructions / Time Slice: %d\n", params->timeSlice);
 }
 
 void printCacheCalculated(CacheCalculated calc) {
@@ -51,19 +52,15 @@ void printPhysicalMemory(MemoryCalculationResults mem) {
 
 
 
-
 void printCalculationResults(
     int teamNumber,
-    char traceFiles[][100],
-    int numFiles,
-    CacheInput cacheInput,
+    Parameters *params,
     CacheCalculated cacheCalc,
     MemoryCalculationResults memResults
 ) {
     printHeader(teamNumber);
-    printTraceFiles(traceFiles, numFiles);
-
-    printCacheInput(cacheInput);
+    printTraceFiles(params);
+    printCacheInput(params);
     printCacheCalculated(cacheCalc);
     printPhysicalMemory(memResults);
 }
