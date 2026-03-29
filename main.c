@@ -3,7 +3,9 @@
 
 int main(int argc, char *argv[]) {
 	Parameters *parameters = initParameters(3);
-	if (parseCommandLine(argc, argv, parameters)) {
+   bool err = parseCommandLine(argc, argv, parameters);
+
+	if (err) {
 		return 1;
 	}
 	return 0;

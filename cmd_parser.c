@@ -1,8 +1,9 @@
+#include "cmd_parser.h"
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cmd_parser.h"
 
 Parameters *initParameters(int fileCount) {
 	Parameters *ptr = malloc(sizeof(Parameters));
@@ -19,7 +20,7 @@ int addFile(fileArray *files, char *fileName) {
 	}
 
 	files->files[files->numFiles].fileName = fileName;
-   files->files[files->numFiles].filePtr = fptr;
+	files->files[files->numFiles].filePtr = fptr;
 	return 0;
 }
 
@@ -48,29 +49,35 @@ int addArgument(Arguments *argumentList, char *str) {
 int clearArguments(Arguments *argumentList) {
 	int i;
 	for (i = argumentList->numArguments - 1; i > 0; i--) {
-	   argumentList->arguments[i] = NULL;
+		argumentList->arguments[i] = NULL;
 	}
 
-   argumentList->numArguments = 0;
+	argumentList->numArguments = 0;
 
 	return 0;
 }
 
-int checkPowerOfTwo(int x) {
-    return x != 0 && (x & (x - 1)) == 0;
+int checkPowerOfTwo(int x) { return x != 0 && (x & (x - 1)) == 0; }
+
+bool isFlag(char* str) {
+   return str[0] == '-' && isalpha((unsigned char)str[1]);
 }
 
 bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
-	int i = 0;
-   int j;
-	bool error;
-   char flag;
+	int i = 1;
+	int j;
+	bool error = false;
+	char flag;
 	Arguments *currentArguments = initArguments(4);
 	while (i < argc) {
-		if (argv[i][0] == '-' && strlen(argv[i]) == 2) {
-         flag = argv[i][1];
-         i++;
-			while (i < argc && argv[i][0] != '-') {
+		if (isFlag(argv[i])) {
+
+			flag = argv[i][1];
+			i++;
+			while (i < argc) {
+				if (isFlag(argv[i])) {
+					break;
+				}
 				addArgument(currentArguments, argv[i]);
 				i++;
 			}
@@ -83,7 +90,8 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 				}
 				parameters->cacheSize = atoi(currentArguments->arguments[0]);
 
-				if ((parameters->cacheSize < 8 || parameters->cacheSize > 8192) || !checkPowerOfTwo(parameters->cacheSize)) {
+				if ((parameters->cacheSize < 8 || parameters->cacheSize > 8192) ||
+					 !checkPowerOfTwo(parameters->cacheSize)) {
 					error = true;
 				}
 				break;
@@ -95,7 +103,8 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 
 				parameters->blockSize = atoi(currentArguments->arguments[0]);
 
-				if ((parameters->blockSize < 8 || parameters->blockSize > 64) || !checkPowerOfTwo(parameters->blockSize)) {
+				if ((parameters->blockSize < 8 || parameters->blockSize > 64) ||
+					 !checkPowerOfTwo(parameters->blockSize)) {
 					error = true;
 				}
 
@@ -107,9 +116,12 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 				}
 				parameters->associativity = atoi(currentArguments->arguments[0]);
 
-            if(parameters->associativity != 1 && ((parameters->associativity < 2 || parameters->associativity > 16) || !checkPowerOfTwo(parameters->blockSize))) {
-               error = true;
-            }
+				if (parameters->associativity != 1 &&
+					 ((parameters->associativity < 2 ||
+						parameters->associativity > 16) ||
+					  !checkPowerOfTwo(parameters->blockSize))) {
+					error = true;
+				}
 				break;
 			case 'r':
 				if (currentArguments->numArguments != 1) {
@@ -117,7 +129,7 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 					break;
 				}
 
-            parameters->replacementPolicy = RR;
+				parameters->replacementPolicy = RR;
 
 				break;
 			case 'p':
@@ -126,11 +138,13 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 					break;
 				}
 
-            parameters->physicalMemory = atoi(currentArguments->arguments[0]);
+				parameters->physicalMemory = atoi(currentArguments->arguments[0]);
 
-            if((parameters->physicalMemory < 2 || parameters->physicalMemory > 4096) || !checkPowerOfTwo(parameters->blockSize)) {
-               error = true;
-            }
+				if ((parameters->physicalMemory < 2 ||
+					  parameters->physicalMemory > 4096) ||
+					 !checkPowerOfTwo(parameters->blockSize)) {
+					error = true;
+				}
 
 				break;
 			case 'u':
@@ -138,12 +152,13 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 					error = true;
 					break;
 				}
-            
-            parameters->physicalMemoryOS = atoi(currentArguments->arguments[0]);
 
-            if(parameters->physicalMemoryOS >= 0 && parameters->physicalMemoryOS <= 100) {
-               error = true;
-            }
+				parameters->physicalMemoryOS = atoi(currentArguments->arguments[0]);
+
+				if (parameters->physicalMemoryOS >= 0 &&
+					 parameters->physicalMemoryOS <= 100) {
+					error = true;
+				}
 				break;
 			case 'n':
 				if (currentArguments->numArguments != 1) {
@@ -151,24 +166,26 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 					break;
 				}
 
-            parameters->timeSlice = atoi(currentArguments->arguments[0]);
+				parameters->timeSlice = atoi(currentArguments->arguments[0]);
 
-            if(parameters->timeSlice < -1) {
-               error = true;
-            }
-            
+				if (parameters->timeSlice < -1) {
+					error = true;
+				}
+
 				break;
 			case 'f':
-				if (currentArguments->numArguments < 1 || currentArguments->numArguments > 3) {
+				if (currentArguments->numArguments < 1 ||
+					 currentArguments->numArguments > 3) {
 					error = true;
 					break;
 				}
-            
-            for (j = 0; j < currentArguments->numArguments; j++) {
-               if(!addFile(&parameters->files, currentArguments->arguments[j])) {
-                  error = true;
-               }
-            }
+
+				for (j = 0; j < currentArguments->numArguments; j++) {
+					if (!addFile(&parameters->files,
+									 currentArguments->arguments[j])) {
+						error = true;
+					}
+				}
 				break;
 			default:
 				error = true;
@@ -176,9 +193,8 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 			}
 			clearArguments(currentArguments);
 		} else {
-         i++;
-      }
+			i++;
+		}
 	}
 	return error;
 }
-
