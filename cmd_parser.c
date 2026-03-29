@@ -9,7 +9,7 @@ Parameters *initParameters(int fileCount) {
 	Parameters *ptr = malloc(sizeof(Parameters));
 	ptr->files.maxFiles = fileCount;
 	ptr->files.numFiles = 0;
-   ptr->files.files = malloc(sizeof(File) * fileCount);
+	ptr->files.files = malloc(sizeof(File) * fileCount);
 	return ptr;
 }
 
@@ -19,12 +19,25 @@ int addFile(fileArray *files, char *fileName) {
 	if (fptr == NULL) {
 		return 1;
 	}
-   
-   files->numFiles++;
+
+	files->numFiles++;
 
 	files->files[files->numFiles - 1].fileName = fileName;
 	files->files[files->numFiles - 1].filePtr = fptr;
 	return 0;
+}
+
+int closeFiles(fileArray *ptr) {
+   int i;
+   for (i = ptr->numFiles - 1; i >= 0; i--) {
+      if(ptr->files[i].filePtr != NULL) {
+         fclose(ptr->files[i].filePtr);
+         ptr->files[i].fileName = NULL;
+      }
+   }
+
+   free(ptr->files);
+   return 0;
 }
 
 Arguments *initArguments(int initialSize) {
@@ -51,7 +64,7 @@ int addArgument(Arguments *argumentList, char *str) {
 
 int clearArguments(Arguments *argumentList) {
 	int i;
-	for (i = argumentList->numArguments - 1; i > 0; i--) {
+	for (i = argumentList->numArguments - 1; i >= 0; i--) {
 		argumentList->arguments[i] = NULL;
 	}
 
@@ -60,10 +73,17 @@ int clearArguments(Arguments *argumentList) {
 	return 0;
 }
 
+int freeArguments(Arguments *ptr) {
+	clearArguments(ptr);
+   free(ptr->arguments);
+	free(ptr);
+	return 0;
+}
+
 int checkPowerOfTwo(int x) { return x != 0 && (x & (x - 1)) == 0; }
 
-bool isFlag(char* str) {
-   return str[0] == '-' && isalpha((unsigned char)str[1]);
+bool isFlag(char *str) {
+	return str[0] == '-' && isalpha((unsigned char)str[1]);
 }
 
 bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
@@ -184,7 +204,7 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 				}
 
 				for (j = 0; j < currentArguments->numArguments; j++) {
-					if (!addFile(&parameters->files,
+					if (addFile(&parameters->files,
 									 currentArguments->arguments[j])) {
 						error = true;
 					}
@@ -199,5 +219,12 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 			i++;
 		}
 	}
+	freeArguments(currentArguments);
 	return error;
+}
+
+int freeParameters(Parameters *ptr) { 
+   closeFiles(&ptr->files);
+   free(ptr);
+   return 0; 
 }

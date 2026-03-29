@@ -1,8 +1,8 @@
 #ifndef CMD_PARSER_H
 #define CMD_PARSER_H
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 typedef enum {
 	RR,
 	RND,
@@ -38,5 +38,6 @@ typedef struct {
 
 Parameters *initParameters(int fileCount);
 bool parseCommandLine(int argc, char *argv[], Parameters *parameters);
+int freeParameters(Parameters *ptr);
 
 #endif
