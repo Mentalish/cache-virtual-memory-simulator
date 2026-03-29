@@ -1,2 +1,6 @@
 *.o
 *.out
+.clang-format
+cache_simulator.exe
+traces-debug/
+traces/
