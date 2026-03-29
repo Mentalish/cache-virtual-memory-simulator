@@ -9,6 +9,7 @@ Parameters *initParameters(int fileCount) {
 	Parameters *ptr = malloc(sizeof(Parameters));
 	ptr->files.maxFiles = fileCount;
 	ptr->files.numFiles = 0;
+   ptr->files.files = malloc(sizeof(File) * fileCount);
 	return ptr;
 }
 
@@ -18,9 +19,11 @@ int addFile(fileArray *files, char *fileName) {
 	if (fptr == NULL) {
 		return 1;
 	}
+   
+   files->numFiles++;
 
-	files->files[files->numFiles].fileName = fileName;
-	files->files[files->numFiles].filePtr = fptr;
+	files->files[files->numFiles - 1].fileName = fileName;
+	files->files[files->numFiles - 1].filePtr = fptr;
 	return 0;
 }
 
