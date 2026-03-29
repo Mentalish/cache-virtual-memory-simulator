@@ -155,8 +155,8 @@ bool parseCommandLine(int argc, char *argv[], Parameters *parameters) {
 
 				parameters->physicalMemoryOS = atoi(currentArguments->arguments[0]);
 
-				if (parameters->physicalMemoryOS >= 0 &&
-					 parameters->physicalMemoryOS <= 100) {
+				if (parameters->physicalMemoryOS < 0 ||
+					 parameters->physicalMemoryOS > 100) {
 					error = true;
 				}
 				break;
