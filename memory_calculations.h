@@ -12,7 +12,7 @@ typedef struct {
     unsigned long long total_ram_for_page_tables_bytes;
 } MemoryCalculationResults;
 
-int calculate(int physical_memory_mb,
+int calculate_memory(int physical_memory_mb,
               double os_percent,
               int num_trace_files,
               MemoryCalculationResults *results);

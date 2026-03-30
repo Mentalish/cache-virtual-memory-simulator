@@ -26,6 +26,6 @@ typedef struct {
     unsigned long long total_ram_for_page_tables_bytes;
 } CacheOutput;
 
-int calculate(const CacheInput *input, CacheOutput *output);
+int calculate_cache(const CacheInput *input, CacheOutput *output);
 
 #endif
