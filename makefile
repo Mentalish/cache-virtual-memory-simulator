@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -g -Wall
 TARGET = cache_simulator.exe
-SOURCES = main.c cmd_parser.c print.c
+SOURCES = main.c cmd_parser.c print.c memory_calculations.c cache_calculations.c
 OBJECTS = $(SOURCES:.c=.o)
 
 all: $(TARGET)
