@@ -13,8 +13,12 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
    
-   //call functions
-   
+   MemoryCalculationResults mem_results;
+   CacheOutput cache_results;
+
+   calculate_cache(parameters, &cache_results);
+   calculate_memory(parameters->physicalMemory, parameters->physicalMemoryOS, parameters->files.numFiles, &mem_results);
+   printCalculationResults(12, parameters, cache_results, mem_results);
 	freeParameters(parameters);
 
 	return 0;

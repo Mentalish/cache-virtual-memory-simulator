@@ -22,9 +22,9 @@ int addFile(fileArray *files, char *fileName) {
 
 	files->numFiles++;
 
-   if(files->maxFiles < files->numFiles) {
-      return 1;
-   }
+	if (files->maxFiles < files->numFiles) {
+		return 1;
+	}
 
 	files->files[files->numFiles - 1].fileName = fileName;
 	files->files[files->numFiles - 1].filePtr = fptr;
@@ -33,11 +33,11 @@ int addFile(fileArray *files, char *fileName) {
 
 int closeFiles(fileArray *ptr) {
 	int i;
-	for (i =0; i < ptr->numFiles; i++) {
+	for (i = 0; i < ptr->numFiles; i++) {
 		if (ptr->files[i].filePtr != NULL) {
 			fclose(ptr->files[i].filePtr);
 			ptr->files[i].fileName = NULL;
-         ptr->files[i].filePtr = NULL;
+			ptr->files[i].filePtr = NULL;
 		}
 	}
 
