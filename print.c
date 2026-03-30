@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 void printHeader(int teamNumber) {
-	printf("Cache Simulator - CS 3853 - Team 12%d\n\n", teamNumber);
+	printf("Cache Simulator - CS 3853 - Team %d\n\n", teamNumber);
 }
 
 void printTraceFiles(Parameters *params) {
