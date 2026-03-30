@@ -16,7 +16,7 @@ static unsigned int log2_int(unsigned long long n) {
     return count;
 }
 
-int calculate(const CacheInput *input, CacheOutput *output) {
+int calculate_cache(const CacheInput *input, CacheOutput *output) {
     unsigned long long cache_size_bytes;
     unsigned long long physical_memory_bytes;
     unsigned long long page_table_entries;

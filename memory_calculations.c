@@ -23,7 +23,7 @@ static unsigned long long ceil_div_ull(unsigned long long numerator,
     return (numerator + denominator - 1) / denominator;
 }
 
-int calculate(int physical_memory_mb,
+int calculate_memory(int physical_memory_mb,
               double os_percent,
               int num_trace_files,
               MemoryCalculationResults *results) {
