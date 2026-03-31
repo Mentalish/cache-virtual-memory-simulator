@@ -23,6 +23,7 @@ int addFile(fileArray *files, char *fileName) {
 	files->numFiles++;
 
 	if (files->maxFiles < files->numFiles) {
+      files->maxFiles--; //cancel file
 		return 1;
 	}
 
