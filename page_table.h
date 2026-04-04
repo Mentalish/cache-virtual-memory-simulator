@@ -1,25 +1,31 @@
 #ifndef PAGE_TABLE_H
 #define PAGE_TABLE_H
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef struct {
-  int phyAddr;
-  int virAddr;
-  int validBit;
+	int phyAddr;
+	int virAddr;
+	int validBit;
 } PageTableEntry;
 
 typedef struct {
-   int numPages;
-   int capacity;
-   int maxCapacity;
-   PageTableEntry* pages; 
+	int numPages;
+	int capacity;
+	int maxCapacity;
+	PageTableEntry *pages;
 } PageTable;
 
 typedef struct {
-   FILE *tracefile;
-   PageTable *processPageTable;
+	FILE *tracefile;
+	PageTable *processPageTable;
 } Process;
+
+Process *InitProcessPageTable(int initialSize, int maxCapacity,
+										FILE *traceFile);
+int insertPage(int virAddr, int phyAddr, int validBit, PageTable *pageTablePtr);
+int removePage(int virAddr, int phyAddr, PageTable *pageTablePtr);
+int freeProcessPageTable(Process *processPtr);
 
 #endif
