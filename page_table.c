@@ -17,10 +17,8 @@ Process *InitProcessPageTable(int initialSize, int maxCapacity,
 }
 
 int addPage(int virAddr, int phyAddr, PageTable *pageTablePtr) {
-	PageTableEntry *newPagePtr = malloc(sizeof(PageTableEntry));
 	pageTablePtr->numPages++;
 	if (pageTablePtr->numPages > pageTablePtr->maxCapacity) {
-		free(newPagePtr);
 		pageTablePtr->numPages--;
 		return 1; // capacity miss
 	}
