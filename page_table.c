@@ -36,6 +36,13 @@ int addPage(int virAddr, int phyAddr, PageTable *pageTablePtr) {
 
 	return 0;
 }
-int removePageByVirAddr(int virAddr, int phyAddr, PageTable *pageTablePtr) {}
-int removePageByPhyAddr(int virAddr, int phyAddr, PageTable *pageTablePtr) {}
-int freeProcessPageTable(Process *processPtr) {}
+int removePageByVirAddr(int virAddr, int phyAddr, PageTable *pageTablePtr) {
+
+}
+int removePageByPhyAddr(int virAddr, int phyAddr, PageTable *pageTablePtr) {
+
+}
+int freeProcessPageTable(Process *processPtr) {
+   free(processPtr->processPageTable->pages);
+   return 0;
+}
