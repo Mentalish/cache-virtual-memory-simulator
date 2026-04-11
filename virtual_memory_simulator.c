@@ -167,6 +167,6 @@ int runVirtualMemorySimulation(Process **processes,
         }
     }
 
-    free(finished);
+    free(finishedArray);
     return 1;
 }
