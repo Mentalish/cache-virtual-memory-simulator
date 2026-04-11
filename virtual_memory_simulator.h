@@ -1,19 +1,21 @@
-#ifndef VIRTUAL_MEMORY_SIMULATION_H
-#define VIRTUAL_MEMORY_SIMULATION_H
+#ifndef VIRTUAL_MEMORY_SIMULATOR_H
+#define VIRTUAL_MEMORY_SIMULATOR_H
 
 #include "memory_calculations.h"
 #include "page_table.h"
 
 typedef struct {
-	unsigned long long physicalPagesUsedBySystem;
-	unsigned long long pagesAvaibletoUser;
-	unsigned long long virtualPagesMapped;
-	unsigned long long pageHits;
-	unsigned long long pagesFromFree;
-	unsigned long long pageFaults;
+    unsigned long long physicalPagesUsedBySystem;
+    unsigned long long pagesAvaibletoUser;
+    unsigned long long virtualPagesMapped;
+    unsigned long long pageHits;
+    unsigned long long pagesFromFree;
+    unsigned long long pageFaults;
 } MemorySimulationResults;
 
 int runVirtualMemorySimulation(Process **processes,
-										 MemoryCalculationResults *pgTableParameters,
-										 MemorySimulationResults *results);
+                               MemoryCalculationResults *pgTableParameters,
+                               int timeSlice,
+                               MemorySimulationResults *results);
+
 #endif
