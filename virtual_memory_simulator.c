@@ -7,14 +7,14 @@
 #define INITIAL_EVICT_PROCESS 0
 
 static int findVictimProcess(Process **processes,
-                             int *finished,
+                             int *finishedArray,
                              int numProcesses,
                              int startIndex) {
     int checked = 0;
     int idx = startIndex;
 
     while (checked < numProcesses) {
-        if (!finished[idx] &&
+        if (!finishedArray[idx] &&
             processes[idx] != NULL &&
             processes[idx]->processPageTable != NULL &&
             processes[idx]->processPageTable->numPages > 0) {
@@ -33,7 +33,7 @@ int runVirtualMemorySimulation(Process **processes,
                                int timeSlice,
                                MemorySimulationResults *results) {
     int numProcesses;
-    int *finished;
+    int *finishedArray;
     int finishedCount;
     int nextEvictProcess;
     unsigned long long totalPhysicalPages;
@@ -51,8 +51,8 @@ int runVirtualMemorySimulation(Process **processes,
         return 0;
     }
 
-    finished = calloc(numProcesses, sizeof(int));
-    if (finished == NULL) {
+    finishedArray = calloc(numProcesses, sizeof(int));
+    if (finishedArray == NULL) {
         return 0;
     }
 
@@ -79,13 +79,13 @@ int runVirtualMemorySimulation(Process **processes,
             PageTable *currentTable;
             int instructionsExecutedThisSlice;
 
-            if (finished[processIndex]) {
+            if (finishedArray[processIndex]) {
                 continue;
             }
 
             currentProcess = processes[processIndex];
             if (currentProcess == NULL || currentProcess->processPageTable == NULL) {
-                finished[processIndex] = 1;
+                finishedArray[processIndex] = 1;
                 finishedCount++;
                 continue;
             }
@@ -101,7 +101,7 @@ int runVirtualMemorySimulation(Process **processes,
 
                 if (!getNextTraceEntry(currentProcess->tracefile, &entry)) {
                     freePagesRemaining += (unsigned long long)currentTable->numPages;
-                    finished[processIndex] = 1;
+                    finishedArray[processIndex] = 1;
                     finishedCount++;
                     break;
                 }
@@ -142,10 +142,10 @@ int runVirtualMemorySimulation(Process **processes,
                         results->pageFaults++;
 
                         victimProcessIndex =
-                            findVictimProcess(processes, finished, numProcesses, nextEvictProcess);
+                            findVictimProcess(processes, finishedArray, numProcesses, nextEvictProcess);
 
                         if (victimProcessIndex < 0) {
-                            free(finished);
+                            free(finishedArray);
                             return 0;
                         }
 
