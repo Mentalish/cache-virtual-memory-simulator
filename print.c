@@ -2,6 +2,8 @@
 #include "page_table.h"
 #include <stdio.h>
 
+#define MAX_VIRTUAL_PAGES 524288
+
 void printHeader(int teamNumber) {
 	printf("Cache Simulator - CS 3853 - Team %d\n\n", teamNumber);
 }
@@ -82,8 +84,8 @@ void printVirMemorySimulationResults(MemorySimulationResults simResults, Process
 
    for(i = 0; i < numProcesses; i++) {
       printf("\n[%d] %s:", i, processes[i]->fileName);
-      printf("\n    Used Page Table Entries: %d (%f %%)", processes[i]->numPagesAtTermination, (processes[i]->numPagesAtTermination / (float)simResults.pagesAvaibletoUser) / 100);
-      printf("\n    Page Table Wasted: %llu bytes", 4096 * (simResults.pagesAvaibletoUser - processes[i]->numPagesAtTermination));
+      printf("\n    Used Page Table Entries: %d (%f %%)", processes[i]->numPagesAtTermination, (processes[i]->numPagesAtTermination / (float)simResults.pagesAvaibletoUser) * 100);
+      printf("\n    Page Table Wasted: %llu bytes", 2 * (unsigned long long)(MAX_VIRTUAL_PAGES - processes[i]->numPagesAtTermination));
       printf("\n");
    }
    printf("\n");
