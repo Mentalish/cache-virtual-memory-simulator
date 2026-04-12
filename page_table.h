@@ -21,12 +21,14 @@ typedef struct {
 } PageTable;
 
 typedef struct {
+	char *fileName;
 	FILE *tracefile;
+   int numPagesAtTermination;
 	PageTable *processPageTable;
 } Process;
 
-Process *InitProcessPageTable(int initialSize, int maxCapacity,
-										FILE *traceFile);
+Process *InitProcessPageTable(int initialSize, int maxCapacity, FILE *traceFile,
+										char *name);
 int insertPage(int virAddr, int phyAddr, int validBit, PageTable *pageTablePtr);
 int addPage(int virAddr, int phyAddr, PageTable *pageTablePtr);
 bool removePageByVirAddr(int virAddr, PageTable *pageTablePtr);

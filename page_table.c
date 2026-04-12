@@ -3,20 +3,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Process *InitProcessPageTable(int initialSize, int maxCapacity,
-										FILE *traceFile) {
+Process *InitProcessPageTable(int initialSize, int maxCapacity, FILE *traceFile,
+										char *name) {
 	Process *processPtr = malloc(sizeof(Process));
-   
-   /*check if allocation failed*/ 
-   if (processPtr == NULL) {
+
+	/*check if allocation failed*/
+	if (processPtr == NULL) {
 		return NULL;
 	}
 
 	processPtr->tracefile = traceFile;
+	processPtr->fileName = name;
+   processPtr->numPagesAtTermination = 0;
 	processPtr->processPageTable = malloc(sizeof(PageTable));
-   
-   /*check if allocation failed*/
-   if (processPtr->processPageTable == NULL) {
+
+	/*check if allocation failed*/
+	if (processPtr->processPageTable == NULL) {
 		free(processPtr);
 		return NULL;
 	}
@@ -40,7 +42,11 @@ Process *InitProcessPageTable(int initialSize, int maxCapacity,
 int shiftPageTable(PageTable *pageTablePtr, int index) {
 	PageTableEntry temp = pageTablePtr->pages[index];
 	int i;
-	for (i = 0; i < pageTablePtr->numPages - 1; i++) {
+
+	if (index < 0 || index >= pageTablePtr->numPages + 1) {
+		return 1;
+	}
+	for (i = index; i < pageTablePtr->numPages - 1; i++) {
 		pageTablePtr->pages[i] = pageTablePtr->pages[i + 1];
 	}
 
@@ -67,12 +73,12 @@ int addPage(int virAddr, int phyAddr, PageTable *pageTablePtr) {
 		}
 
 		pageTablePtr->pages =
-			 realloc(pageTablePtr->pages, sizeof(PageTableEntry) * 8);
+			 realloc(pageTablePtr->pages, sizeof(PageTableEntry) * newCapacity);
 		pageTablePtr->capacity = newCapacity;
 	}
 
 	pageTablePtr->pages[pageTablePtr->numPages].phyAddr = phyAddr;
-	pageTablePtr->pages[pageTablePtr->numPages].virAddr = phyAddr;
+	pageTablePtr->pages[pageTablePtr->numPages].virAddr = virAddr;
 	pageTablePtr->pages[pageTablePtr->numPages].validBit = true;
 	pageTablePtr->pages[pageTablePtr->numPages].dirtyBit = false;
 	pageTablePtr->numPages++;
@@ -105,8 +111,8 @@ bool removePageByPhyAddr(int phyAddr, PageTable *pageTablePtr) {
 	pageTablePtr->pages[ind].phyAddr = 0;
 	pageTablePtr->pages[ind].validBit = false;
 	pageTablePtr->pages[ind].dirtyBit = false;
-	pageTablePtr->numPages--;
 	shiftPageTable(pageTablePtr, ind);
+   pageTablePtr->numPages--;
 	return true;
 }
 int freeProcessPageTable(Process *processPtr) {
@@ -131,7 +137,7 @@ int searchPageByVir(PageTable *pageTablePtr, int virAddr) {
 	}
 
 	for (i = 0; i < pageTablePtr->numPages; i++) {
-		if (pageTablePtr->pages->virAddr == virAddr) {
+		if (pageTablePtr->pages[i].virAddr == virAddr) {
 			return i;
 		}
 	}
@@ -147,7 +153,7 @@ int searchPageByPhy(PageTable *pageTablePtr, int phyAddr) {
 	}
 
 	for (i = 0; i < pageTablePtr->numPages; i++) {
-		if (pageTablePtr->pages->virAddr == phyAddr) {
+		if (pageTablePtr->pages[i].phyAddr == phyAddr) {
 			return i;
 		}
 	}
