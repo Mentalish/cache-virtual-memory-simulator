@@ -72,17 +72,18 @@ void printVirMemorySimulationResults(MemorySimulationResults simResults, Process
 			 "Pages Avaiable To User:", simResults.pagesAvaibletoUser);
 	printf("%-30s %llu\n",
 			 "Virtual Pages Mapped:", simResults.virtualPagesMapped);
-	printf("%-30s\n", "-");
-	printf("%-30s %llu\n", "Page Table Hits:", simResults.pageHits);
-	printf("%-30s %llu\n", "Pages From Free:", simResults.pagesFromFree);
-   printf("%-30s %llu\n", "Total Page Faults:", simResults.pageFaults);
+   printf("    -----------------------------");
+	printf("\n    %-26s %llu\n", "Page Table Hits:", simResults.pageHits);
+	printf("    %-26s %llu\n", "Pages From Free:", simResults.pagesFromFree);
+   printf("    %-26s %llu\n", "Total Page Faults:", simResults.pageFaults);
 
    printf("Page Table Usage Per Process:");
-   printf("-----------------------------");
+   printf("\n-----------------------------");
 
    for(i = 0; i < numProcesses; i++) {
       printf("\n[%d] %s\n", i, processes[i]->fileName);
-      printf("\n\t\t Used Page Table Entries: %d (%f %%)", processes[i]->processPageTable->numPages, processes[i]->processPageTable->numPages / (float)simResults.pagesAvaibletoUser);
-      printf("\n\t\t Page Table Wasted: %llu", 4096 * (processes[i]->processPageTable->numPages - simResults.pagesAvaibletoUser));
+      printf("\n    Used Page Table Entries: %d (%f %%)", processes[i]->processPageTable->numPages, processes[i]->processPageTable->numPages / (float)simResults.pagesAvaibletoUser);
+      printf("\n    Page Table Wasted: %llu bytes", 4096 * (simResults.pagesAvaibletoUser - processes[i]->processPageTable->numPages));
    }
+   printf("\n");
 }
