@@ -72,7 +72,7 @@ int addPage(int virAddr, int phyAddr, PageTable *pageTablePtr) {
 	}
 
 	pageTablePtr->pages[pageTablePtr->numPages].phyAddr = phyAddr;
-	pageTablePtr->pages[pageTablePtr->numPages].virAddr = phyAddr;
+	pageTablePtr->pages[pageTablePtr->numPages].virAddr = virAddr;
 	pageTablePtr->pages[pageTablePtr->numPages].validBit = true;
 	pageTablePtr->pages[pageTablePtr->numPages].dirtyBit = false;
 	pageTablePtr->numPages++;
@@ -131,7 +131,7 @@ int searchPageByVir(PageTable *pageTablePtr, int virAddr) {
 	}
 
 	for (i = 0; i < pageTablePtr->numPages; i++) {
-		if (pageTablePtr->pages->virAddr == virAddr) {
+		if (pageTablePtr->pages[i].virAddr == virAddr) {
 			return i;
 		}
 	}
@@ -147,7 +147,7 @@ int searchPageByPhy(PageTable *pageTablePtr, int phyAddr) {
 	}
 
 	for (i = 0; i < pageTablePtr->numPages; i++) {
-		if (pageTablePtr->pages->virAddr == phyAddr) {
+		if (pageTablePtr->pages[i].phyAddr== phyAddr) {
 			return i;
 		}
 	}
