@@ -5,10 +5,8 @@
 
 #define LINE_BUF 4096
 #define EIP_ADDR_OFFSET 10
-#define DST_ADDR_OFFSET 6
-#define DST_DATA_OFFSET 15
-#define SRC_ADDR_OFFSET 28
-#define SRC_DATA_OFFSET 37
+#define ADDR_OFFSET 6
+#define DATA_OFFSET 15
 
 static TraceEntry pending[3];
 static int pendingCount = 0;
@@ -79,8 +77,8 @@ int getNextTraceEntry(FILE *file, TraceEntry *entry) {
         char *srcPtr = strstr(dstLine, "srcM:");
 
         /*read*/
-        if (!isInvalid(srcPtr + 15)) {
-            if (sscanf(srcPtr + 6, "%x", &srcAddr) == 1) {
+        if (!isInvalid(srcPtr + DATA_OFFSET)) {
+            if (sscanf(srcPtr + ADDR_OFFSET, "%x", &srcAddr) == 1) {
                 pending[pendingCount].operation = 'R';
                 pending[pendingCount].virAddr = (uint32_t)srcAddr;
                 pending[pendingCount].instructionComplete = 0;
@@ -90,8 +88,8 @@ int getNextTraceEntry(FILE *file, TraceEntry *entry) {
 
 
         /*write*/
-        if (!isInvalid(dstPtr + 15)) {
-            if (sscanf(dstPtr + 6, "%x", &dstAddr) == 1) {
+        if (!isInvalid(dstPtr + DATA_OFFSET)) {
+            if (sscanf(dstPtr + ADDR_OFFSET, "%x", &dstAddr) == 1) {
                 pending[pendingCount].operation = 'W';
                 pending[pendingCount].virAddr = (uint32_t)dstAddr;
                 pending[pendingCount].instructionComplete = 0;
