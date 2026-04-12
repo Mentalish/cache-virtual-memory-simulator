@@ -14,7 +14,7 @@ Process *InitProcessPageTable(int initialSize, int maxCapacity, FILE *traceFile,
 
 	processPtr->tracefile = traceFile;
 	processPtr->fileName = name;
-   processPtr->numPagesAtTermination = 0;
+	processPtr->numPagesAtTermination = 0;
 	processPtr->processPageTable = malloc(sizeof(PageTable));
 
 	/*check if allocation failed*/
@@ -26,15 +26,7 @@ Process *InitProcessPageTable(int initialSize, int maxCapacity, FILE *traceFile,
 	processPtr->processPageTable->numPages = 0;
 	processPtr->processPageTable->maxCapacity = maxCapacity;
 	processPtr->processPageTable->capacity = initialSize;
-	processPtr->processPageTable->pages =
-		 malloc(sizeof(PageTableEntry) * initialSize);
-
-	/*check if allocation failed*/
-	if (processPtr->processPageTable->pages == NULL) {
-		free(processPtr->processPageTable);
-		free(processPtr);
-		return NULL;
-	}
+	processPtr->processPageTable->pages = NULL;
 
 	return processPtr;
 }
@@ -55,107 +47,150 @@ int shiftPageTable(PageTable *pageTablePtr, int index) {
 }
 
 int addPage(int virAddr, int phyAddr, PageTable *pageTablePtr) {
-	int newCapacity;
 	if (pageTablePtr == NULL) {
 		return 1;
 	}
 
 	if (pageTablePtr->numPages >= pageTablePtr->maxCapacity) {
-		pageTablePtr->numPages--;
 		return 1; /* capacity miss */
 	}
 
-	if (pageTablePtr->numPages >= pageTablePtr->capacity) {
-		newCapacity = pageTablePtr->capacity * 2;
+	PageTableEntry *newPage = malloc(sizeof(PageTableEntry));
 
-		if (newCapacity > pageTablePtr->maxCapacity) {
-			newCapacity = pageTablePtr->maxCapacity;
+	newPage->phyAddr = phyAddr;
+	newPage->virAddr = virAddr;
+	newPage->validBit = true;
+	newPage->dirtyBit = false;
+	newPage->next = NULL;
+
+	if (pageTablePtr->pages == NULL) { /* first page*/
+		pageTablePtr->pages = newPage;
+	} else {
+		PageTableEntry *currPage = pageTablePtr->pages;
+
+		while (currPage->next != NULL) {
+			if (currPage->phyAddr == phyAddr) {
+				currPage->validBit = true;
+				free(newPage);
+				return 1;
+			}
+			currPage = currPage->next;
 		}
 
-		pageTablePtr->pages =
-			 realloc(pageTablePtr->pages, sizeof(PageTableEntry) * newCapacity);
-		pageTablePtr->capacity = newCapacity;
+		if (currPage->phyAddr == phyAddr) {
+			pageTablePtr->numPagesValid++;
+			currPage->validBit = true;
+			free(newPage);
+			return 1;
+		}
+
+		currPage->next = newPage;
 	}
 
-	pageTablePtr->pages[pageTablePtr->numPages].phyAddr = phyAddr;
-	pageTablePtr->pages[pageTablePtr->numPages].virAddr = virAddr;
-	pageTablePtr->pages[pageTablePtr->numPages].validBit = true;
-	pageTablePtr->pages[pageTablePtr->numPages].dirtyBit = false;
 	pageTablePtr->numPages++;
-
+	pageTablePtr->numPagesValid++;
 	return 0;
 }
-bool removePageByVirAddr(int virAddr, PageTable *pageTablePtr) {
-	int ind = searchPageByVir(pageTablePtr, virAddr);
+bool invalidatePagebyPhyAddr(int phyAddr, PageTable *pageTablePtr) {
 
-	if (ind < 0) {
-		return false; /* no page to free */
+	if (pageTablePtr->pages == NULL) {
+		return false; /* no page to invalidate */
 	}
 
-	pageTablePtr->pages[ind].virAddr = 0;
-	pageTablePtr->pages[ind].phyAddr = 0;
-	pageTablePtr->pages[ind].validBit = false;
-	pageTablePtr->pages->dirtyBit = false;
-	pageTablePtr->numPages--;
-	shiftPageTable(pageTablePtr, ind);
-	return true;
-}
-bool removePageByPhyAddr(int phyAddr, PageTable *pageTablePtr) {
-	int ind = searchPageByPhy(pageTablePtr, phyAddr);
+	PageTableEntry *currPage = pageTablePtr->pages;
 
-	if (ind < 0) {
-		return false; /* no page to free */
+	while (currPage != NULL) {
+		if (currPage->phyAddr == phyAddr) {
+			currPage->validBit = false;
+			pageTablePtr->numPagesValid--;
+			return true;
+		}
+		currPage = currPage->next;
 	}
 
-	pageTablePtr->pages[ind].virAddr = 0;
-	pageTablePtr->pages[ind].phyAddr = 0;
-	pageTablePtr->pages[ind].validBit = false;
-	pageTablePtr->pages[ind].dirtyBit = false;
-	shiftPageTable(pageTablePtr, ind);
-   pageTablePtr->numPages--;
-	return true;
+	return false;
 }
 int freeProcessPageTable(Process *processPtr) {
 	if (processPtr == NULL) {
 		return 0;
 	}
 
-	if (processPtr->processPageTable != NULL) {
-		free(processPtr->processPageTable->pages);
-		free(processPtr->processPageTable);
+	/*free page table*/
+	PageTableEntry *currPage = processPtr->processPageTable->pages;
+	PageTableEntry *next;
+	while (currPage != NULL) {
+		next = currPage->next;
+		free(currPage);
+
+		currPage = next;
 	}
 
 	free(processPtr);
 	return 0;
 }
 
-int searchPageByVir(PageTable *pageTablePtr, int virAddr) {
-	int i;
-
+PageTableEntry *searchPageByVir(PageTable *pageTablePtr, int virAddr) {
 	if (pageTablePtr == NULL) {
-		return -2;
+		return NULL;
 	}
 
-	for (i = 0; i < pageTablePtr->numPages; i++) {
-		if (pageTablePtr->pages[i].virAddr == virAddr) {
-			return i;
+	PageTableEntry *currPage = pageTablePtr->pages;
+
+	while (currPage != NULL) {
+		if (currPage->virAddr == virAddr && currPage->validBit) {
+			return currPage;
 		}
+
+		currPage = currPage->next;
 	}
 
-	return -1; /* not found */
+	return NULL; /* not found */
 }
 
-int searchPageByPhy(PageTable *pageTablePtr, int phyAddr) {
-	int i;
-
+PageTableEntry *searchPageByPhyAddr(PageTable *pageTablePtr, int phyAddr) {
 	if (pageTablePtr == NULL) {
-		return -2;
+		return NULL;
 	}
 
-	for (i = 0; i < pageTablePtr->numPages; i++) {
-		if (pageTablePtr->pages[i].phyAddr == phyAddr) {
-			return i;
+	PageTableEntry *currPage = pageTablePtr->pages;
+
+	while (currPage != NULL) {
+		if (currPage->phyAddr == phyAddr) {
+			return currPage;
 		}
+
+		currPage = currPage->next;
 	}
-	return -1; /* not found */
+
+	return NULL; /* not found */
+}
+
+PageTableEntry *findFirstValidPage(PageTable *pageTablePtr) {
+	if (pageTablePtr == NULL) {
+		return NULL;
+	}
+
+	PageTableEntry *currPage = pageTablePtr->pages;
+
+	while (currPage != NULL) {
+		if (currPage->validBit == true) {
+			return currPage;
+		}
+
+		currPage = currPage->next;
+	}
+
+	return NULL; /* not found */
+}
+
+PageTableEntry *popPage(PageTable *pageTablePtr) {
+	if (pageTablePtr->pages == NULL) {
+		return NULL;
+	}
+
+	PageTableEntry *oldPage = pageTablePtr->pages;
+
+	pageTablePtr->pages = pageTablePtr->pages->next;
+
+	return oldPage;
 }

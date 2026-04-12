@@ -17,7 +17,7 @@ int runVMProcess(Parameters *parameters, MemoryCalculationResults *memResults,
 	for (i = 0; i < parameters->files.numFiles; i++) {
 		processes[i] =
 			 InitProcessPageTable(10,
-										 memResults->number_physical_pages - memResults->number_pages_for_system,
+										 MAX_VIRTUAL_PAGES,
 										 parameters->files.files[i].filePtr,
 										 parameters->files.files[i].fileName);
 

@@ -26,6 +26,38 @@ static int findVictimProcess(Process **processes, int *finishedArray,
 	return -1;
 }
 
+int findAnyInvalidPhyAddr(Process **processes, int *finishedArray,
+								  int numProcesses) {
+	int i;
+	for (i = 0; i < numProcesses; i++) {
+		if (finishedArray[i] && processes[i] != NULL) {
+			PageTable *pageTablePtr = processes[i]->processPageTable;
+
+			PageTableEntry *oldPage;
+			oldPage = popPage(pageTablePtr);
+			if (oldPage != NULL) {
+				int addr = oldPage->phyAddr;
+				free(oldPage);
+				return addr;
+			}
+		}
+	}
+
+	return -1;
+}
+
+int countValidPages(Process **processes, int *finishedArray, int numProcesses) {
+	int i;
+	int validPages = 0;
+	for (i = 0; i < numProcesses; i++) {
+		if (!finishedArray[i] && processes[i] != NULL) {
+			validPages += processes[i]->processPageTable->numPagesValid;
+		}
+	}
+
+	return validPages;
+}
+
 int runVirtualMemorySimulation(Process **processes,
 										 MemoryCalculationResults *pgTableParameters,
 										 int timeSlice,
@@ -34,6 +66,7 @@ int runVirtualMemorySimulation(Process **processes,
 	int *finishedArray;
 	int finishedCount;
 	int nextEvictProcess;
+
 	unsigned long long totalPhysicalPages;
 	unsigned long long systemPages;
 	unsigned long long pagesAvailableToUser;
@@ -59,6 +92,7 @@ int runVirtualMemorySimulation(Process **processes,
 	pagesAvailableToUser = totalPhysicalPages - systemPages;
 	freePagesRemaining = pagesAvailableToUser;
 	nextFreePhysicalPage = systemPages;
+	int physicalPageNumber = (int)nextFreePhysicalPage;
 	nextEvictProcess = INITIAL_EVICT_PROCESS;
 	finishedCount = 0;
 
@@ -97,11 +131,11 @@ int runVirtualMemorySimulation(Process **processes,
 				TraceEntry entry;
 				int virtualPageNumber;
 				int offset;
-				int entryIndex;
+				PageTableEntry *entryPage;
 
 				if (!getNextTraceEntry(currentProcess->tracefile, &entry)) {
-
-					freePagesRemaining += (unsigned long long)currentTable->numPages;
+					//freePagesRemaining +=
+						 //(unsigned long long)currentTable->numPagesValid;
 					finishedArray[processIndex] = 1;
 					finishedCount++;
 					break;
@@ -110,31 +144,34 @@ int runVirtualMemorySimulation(Process **processes,
 				virtualPageNumber = (int)(entry.virAddr >> PAGE_OFFSET_BITS);
 				offset = (int)(entry.virAddr & PAGE_OFFSET_MASK);
 
-				entryIndex = searchPageByVir(currentTable, virtualPageNumber);
+				entryPage = searchPageByVir(currentTable, virtualPageNumber);
 
-				if (entryIndex >= 0) {
-					int physicalPageNumber;
+				if (entryPage != NULL) {
 					unsigned int physicalAddress;
 
 					results->pageHits++;
 
-					physicalPageNumber = currentTable->pages[entryIndex].phyAddr;
+					physicalPageNumber = entryPage->phyAddr;
 					physicalAddress =
 						 ((unsigned int)physicalPageNumber << PAGE_OFFSET_BITS) |
 						 (unsigned int)offset;
 					(void)physicalAddress;
 				} else {
-					int physicalPageNumber;
-
 					results->virtualPagesMapped++;
 
 					if (freePagesRemaining > 0) {
-						physicalPageNumber = (int)nextFreePhysicalPage;
-						nextFreePhysicalPage++;
-						freePagesRemaining--;
+
+						if (nextFreePhysicalPage < totalPhysicalPages) {
+							physicalPageNumber = (int)nextFreePhysicalPage;
+							nextFreePhysicalPage++;
+						} else {
+							physicalPageNumber = findAnyInvalidPhyAddr(
+								 processes, finishedArray, numProcesses);
+						}
 
 						addPage(virtualPageNumber, physicalPageNumber, currentTable);
 						results->pagesFromFree++;
+						freePagesRemaining--;
 						processes[processIndex]->numPagesAtTermination++;
 					} else {
 						int victimProcessIndex;
@@ -152,11 +189,16 @@ int runVirtualMemorySimulation(Process **processes,
 						victimProcess = processes[victimProcessIndex];
 						victimTable = victimProcess->processPageTable;
 
-						physicalPageNumber = victimTable->pages[0].phyAddr;
+						PageTableEntry *newPage = findFirstValidPage(victimTable);
+						if (newPage != NULL) {
+							physicalPageNumber =
+								 newPage->phyAddr; // find first valid page
 
-						removePageByPhyAddr(physicalPageNumber, victimTable);
-						addPage(virtualPageNumber, physicalPageNumber, currentTable);
-                  processes[processIndex]->numPagesAtTermination++;
+							invalidatePagebyPhyAddr(physicalPageNumber, victimTable);
+							addPage(virtualPageNumber, physicalPageNumber,
+									  currentTable);
+							processes[processIndex]->numPagesAtTermination++;
+						}
 
 						nextEvictProcess = (victimProcessIndex + 1) % numProcesses;
 					}
