@@ -9,8 +9,8 @@ typedef struct PageTableEntry{
 	int virAddr; /* virtual page number */
 	bool validBit;
    bool dirtyBit;
-   PageTableEntry* prev;
-   PageTableEntry* next;
+   struct PageTableEntry* prev;
+   struct PageTableEntry* next;
 } PageTableEntry;
 
 typedef struct {
