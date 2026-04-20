@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "cache_calculations.h"
+#include "cache_simulator.h"
 #include "page_table.h"
-#include "virtual_memory_simulator.h"
 #include "sim_runner.h"
+#include "virtual_memory_simulator.h"
 
 int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
-					  MemorySimulationResults *memSimResults, Process **processes) {
+						CacheOutput *cacheResults,
+						MemorySimulationResults *memSimResults, CacheSimulationResults * cacheSimResults, Process **processes) {
 
 	int i;
 
@@ -18,7 +21,8 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 	for (i = 0; i < parameters->files.numFiles; i++) {
 		processes[i] =
 			 InitProcessPageTable(10,
-										 memResults->number_physical_pages - memResults->number_pages_for_system,
+										 memResults->number_physical_pages -
+											  memResults->number_pages_for_system,
 										 parameters->files.files[i].filePtr,
 										 parameters->files.files[i].fileName);
 
@@ -34,14 +38,17 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 	runVirtualMemorySimulation(processes, memResults, parameters->timeSlice,
 										memSimResults);
 
-   //Prep processes for cache simulation
-   for(i = 0; parameters->files.numFiles; i++) {
-      if(parameters->files.files[i].filePtr != NULL) {
-         rewind(parameters->files.files[i].filePtr);
-      }
-   }
+	// Prep processes for cache simulation
+	for (i = 0; parameters->files.numFiles; i++) {
+		if (parameters->files.files[i].filePtr != NULL) {
+			rewind(parameters->files.files[i].filePtr);
+		}
+	}
 
-	return 0;
+	runCacheSimulation(processes, cacheResults, parameters->timeSlice,
+							 cacheSimResults);
+
+		 return 0;
 }
 
 int freeProcesses(int numFiles, Process **processes) {
