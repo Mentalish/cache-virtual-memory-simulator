@@ -2,9 +2,9 @@
 
 #include "page_table.h"
 #include "virtual_memory_simulator.h"
-#include "vm_runner.h"
+#include "sim_runner.h"
 
-int runVMProcess(Parameters *parameters, MemoryCalculationResults *memResults,
+int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 					  MemorySimulationResults *memSimResults, Process **processes) {
 
 	int i;

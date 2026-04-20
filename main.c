@@ -4,7 +4,7 @@
 #include "page_table.h"
 #include "print.h"
 #include "virtual_memory_simulator.h"
-#include "vm_runner.h"
+#include "sim_runner.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 	printCalculationResults(12, parameters, cache_results, memResults);
 	Process **processes =
 		 calloc(parameters->files.numFiles + 1, sizeof(Process *));
-	runVMProcess(parameters, &memResults, &memSimResults, processes);
+	runSimulation(parameters, &memResults, &memSimResults, processes);
 	printVirMemorySimulationResults(memSimResults, processes,
 											  parameters->files.numFiles);
 	freeProcesses(parameters->files.numFiles, processes);
