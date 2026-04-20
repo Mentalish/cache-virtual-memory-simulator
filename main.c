@@ -1,10 +1,11 @@
 #include "cache_calculations.h"
+#include "cache_simulator.h"
 #include "cmd_parser.h"
 #include "memory_calculations.h"
 #include "page_table.h"
 #include "print.h"
+#include "sim_runner.h"
 #include "virtual_memory_simulator.h"
-#include "vm_runner.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -22,6 +23,7 @@ int main(int argc, char *argv[]) {
 	MemoryCalculationResults memResults = {0};
 	CacheOutput cache_results = {0};
 	MemorySimulationResults memSimResults = {0};
+	CacheSimulationResults cacheSimResults = {0};
 
 	calculate_cache(parameters, &cache_results);
 	calculate_memory(parameters->physicalMemory, parameters->physicalMemoryOS,
@@ -29,7 +31,8 @@ int main(int argc, char *argv[]) {
 	printCalculationResults(12, parameters, cache_results, memResults);
 	Process **processes =
 		 calloc(parameters->files.numFiles + 1, sizeof(Process *));
-	runVMProcess(parameters, &memResults, &memSimResults, processes);
+	runSimulation(parameters, &memResults, &cache_results, &memSimResults,
+					  &cacheSimResults, processes);
 	printVirMemorySimulationResults(memSimResults, processes,
 											  parameters->files.numFiles);
 	freeProcesses(parameters->files.numFiles, processes);
