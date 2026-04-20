@@ -39,7 +39,7 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 										memSimResults);
 
 	// Prep processes for cache simulation
-	for (i = 0; parameters->files.numFiles; i++) {
+	for (i = 0; i < parameters->files.numFiles; i++) {
 		if (parameters->files.files[i].filePtr != NULL) {
 			rewind(parameters->files.files[i].filePtr);
 		}
