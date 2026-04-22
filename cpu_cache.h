@@ -3,12 +3,7 @@
 
 #include "cache_calculations.h"
 #include "cache_simulator.h"
-typedef enum {
-	CAPACITY,
-	CONFLICT,
-	COMPULSORY,
-   NO_MISS
-} MissType;
+typedef enum { CAPACITY, CONFLICT, COMPULSORY, NO_MISS } MissType;
 
 typedef struct {
 	int tag;
@@ -22,7 +17,8 @@ typedef struct {
 	CacheBlock **cacheBlocks;
 } Cache;
 
-Cache* initCache(CacheInput cacheInputParameters, CacheOutput cacheCalcResults);
-int freeCache(Cache* cachePtr);
+Cache *initCache(CacheInput cacheInputParameters, CacheOutput cacheCalcResults);
+MissType readCache(Cache *cachePtr, int phyAddr);
+int freeCache(Cache *cachePtr);
 
 #endif
