@@ -25,7 +25,7 @@ static int findVictimProcess(Process **processes, int *finishedArray,
 	return -1;
 }
 
-MemoryReturnState runVirtualMemorySimulation(Process **processes, int processIndex,
+MemoryReturnStatus runVirtualMemorySimulation(Process **processes, int processIndex,
 										 MemoryCalculationResults *pgTableParameters,
 										 int timeSlice, MemorySimulationResults *results,
 										 MemoryState *state, TraceEntry entry,

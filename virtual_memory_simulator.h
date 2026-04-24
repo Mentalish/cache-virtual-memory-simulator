@@ -30,9 +30,9 @@ typedef enum {
    PROC_FINISHED,
    ERR,
    SUCCESS,
-} MemoryReturnState;
+} MemoryReturnStatus;
 
-MemoryReturnState runVirtualMemorySimulation(Process **processes, int processIndex,
+MemoryReturnStatus runVirtualMemorySimulation(Process **processes, int processIndex,
 										 MemoryCalculationResults *pgTableParameters,
 										 int timeSlice, MemorySimulationResults *results,
 										 MemoryState *state, TraceEntry entry,

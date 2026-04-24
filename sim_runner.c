@@ -94,6 +94,7 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 
 			while (timeSlice == -1 || instructionsExecutedThisSlice < timeSlice) {
 				TraceEntry entry;
+				MemoryReturnStatus memStatus;
 
 				// get next instruction
 				if (!getNextTraceEntry(currentProcess->tracefile, &entry)) {
@@ -103,9 +104,25 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 					state.finishedCount++;
 					break;
 				}
-				runVirtualMemorySimulation(processes, processIndex, memResults,
-													parameters->timeSlice, memSimResults,
-													&state, entry, numProcesses);
+
+				memStatus = runVirtualMemorySimulation(
+					 processes, processIndex, memResults, parameters->timeSlice,
+					 memSimResults, &state, entry, numProcesses);
+
+				switch (memStatus) {
+				case PROC_SKIP:
+					continue;
+					break;
+				case PROC_FINISHED: // invalidate cache entries
+					break;
+				case ERR:
+					return 1;
+					break;
+				case SUCCESS:
+					// do nothing
+					break;
+				}
+
 				if (entry.instructionComplete) {
 					instructionsExecutedThisSlice++;
 				}
