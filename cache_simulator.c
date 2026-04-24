@@ -1,4 +1,5 @@
 #include "cache_simulator.h"
+#include "cpu_cache.h"
 #include "trace_parser.h"
 
 int runCacheSimulation(Process **processes, CacheOutput *cacheParameters,
@@ -7,6 +8,7 @@ int runCacheSimulation(Process **processes, CacheOutput *cacheParameters,
 	int numProcesses;
 	int finishedCount = 0;
 	int instructionsExecutedThisSlice = 0;
+	int cacheCol;
 	if (processes == NULL || cacheParameters == NULL || results == NULL) {
 		return 0;
 	}
@@ -34,6 +36,10 @@ int runCacheSimulation(Process **processes, CacheOutput *cacheParameters,
 				TraceEntry entry;
 				if (!getNextTraceEntry(currentProcess->tracefile, &entry)) {
 					break;
+				}
+
+				if (entry.operation == 'R') {
+				} else {
 				}
 				instructionsExecutedThisSlice++;
 			}
