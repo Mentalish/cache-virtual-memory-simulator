@@ -5,7 +5,6 @@
 
 #define PAGE_OFFSET_BITS 12
 #define PAGE_OFFSET_MASK 0xFFF
-#define INITIAL_EVICT_PROCESS 0
 
 static int findVictimProcess(Process **processes, int *finishedArray,
 									  int numProcesses, int startIndex) {
@@ -26,149 +25,85 @@ static int findVictimProcess(Process **processes, int *finishedArray,
 	return -1;
 }
 
-int runVirtualMemorySimulation(Process **processes,
+int runVirtualMemorySimulation(Process **processes, int processIndex,
 										 MemoryCalculationResults *pgTableParameters,
-										 int timeSlice,
-										 MemorySimulationResults *results) {
-	int numProcesses;
-	int *finishedArray;
-	int finishedCount;
-	int nextEvictProcess;
-	unsigned long long totalPhysicalPages;
-	unsigned long long systemPages;
-	unsigned long long pagesAvailableToUser;
-	unsigned long long freePagesRemaining;
-	unsigned long long nextFreePhysicalPage;
-	if (processes == NULL || pgTableParameters == NULL || results == NULL) {
+										 int timeSlice, MemorySimulationResults *results,
+										 MemoryState *state, TraceEntry entry,
+										 int numProcesses) {
+	Process *currentProcess;
+	PageTable *currentTable;
+
+	if (state->finishedArray[processIndex]) {
 		return 0;
 	}
 
-	numProcesses = pgTableParameters->num_trace_files;
+	currentProcess = processes[processIndex];
+	currentTable = currentProcess->processPageTable;
+	if (currentProcess == NULL || currentProcess->processPageTable == NULL) {
+		state->finishedArray[processIndex] = 1;
 
-	if (numProcesses <= 0) {
+		state->finishedCount++;
 		return 0;
 	}
 
-	finishedArray = calloc(numProcesses, sizeof(int));
-	if (finishedArray == NULL) {
-		return 0;
-	}
+	int virtualPageNumber;
+	int offset;
+	int entryIndex;
 
-	totalPhysicalPages = pgTableParameters->number_physical_pages;
-	systemPages = pgTableParameters->number_pages_for_system;
-	pagesAvailableToUser = totalPhysicalPages - systemPages;
-	freePagesRemaining = pagesAvailableToUser;
-	nextFreePhysicalPage = systemPages;
-	nextEvictProcess = INITIAL_EVICT_PROCESS;
-	finishedCount = 0;
+	virtualPageNumber = (int)(entry.virAddr >> PAGE_OFFSET_BITS);
+	offset = (int)(entry.virAddr & PAGE_OFFSET_MASK);
 
-	results->physicalPagesUsedBySystem = systemPages;
-	results->pagesAvaibletoUser = pagesAvailableToUser;
-	results->virtualPagesMapped = 0;
-	results->pageHits = 0;
-	results->pagesFromFree = 0;
-	results->pageFaults = 0;
+	entryIndex = searchPageByVir(currentTable, virtualPageNumber);
 
-	while (finishedCount < numProcesses) {
-		int processIndex;
+	if (entryIndex >= 0) {
+		int physicalPageNumber;
+		unsigned int physicalAddress;
 
-		for (processIndex = 0; processIndex < numProcesses; processIndex++) {
-			Process *currentProcess;
-			PageTable *currentTable;
-			int instructionsExecutedThisSlice;
+		results->pageHits++;
 
-			if (finishedArray[processIndex]) {
-				continue;
+		physicalPageNumber = currentTable->pages[entryIndex].phyAddr;
+		physicalAddress = ((unsigned int)physicalPageNumber << PAGE_OFFSET_BITS) |
+								(unsigned int)offset;
+		(void)physicalAddress;
+	} else {
+		int physicalPageNumber;
+
+		results->virtualPagesMapped++;
+
+		if (state->freePagesRemaining > 0) {
+			physicalPageNumber = (int)state->nextFreePhysicalPage;
+			state->nextFreePhysicalPage++;
+			state->freePagesRemaining--;
+
+			addPage(virtualPageNumber, physicalPageNumber, currentTable);
+			results->pagesFromFree++;
+			processes[processIndex]->numPagesAtTermination++;
+		} else {
+			int victimProcessIndex;
+			Process *victimProcess;
+			PageTable *victimTable;
+			results->pageFaults++;
+			victimProcessIndex =
+				 findVictimProcess(processes, state->finishedArray, numProcesses,
+										 state->nextEvictProcess);
+
+			if (victimProcessIndex < 0) {
+				free(state->finishedArray);
+				return 0;
 			}
 
-			currentProcess = processes[processIndex];
-			if (currentProcess == NULL ||
-				 currentProcess->processPageTable == NULL) {
-				finishedArray[processIndex] = 1;
+			victimProcess = processes[victimProcessIndex];
+			victimTable = victimProcess->processPageTable;
 
-				finishedCount++;
-				continue;
-			}
+			physicalPageNumber = victimTable->pages[0].phyAddr;
 
-			currentTable = currentProcess->processPageTable;
-			instructionsExecutedThisSlice = 0;
+			removePageByPhyAddr(physicalPageNumber, victimTable);
+			addPage(virtualPageNumber, physicalPageNumber, currentTable);
+			processes[processIndex]->numPagesAtTermination++;
 
-			while (timeSlice == -1 || instructionsExecutedThisSlice < timeSlice) {
-				TraceEntry entry;
-				int virtualPageNumber;
-				int offset;
-				int entryIndex;
-
-				if (!getNextTraceEntry(currentProcess->tracefile, &entry)) {
-
-					freePagesRemaining += (unsigned long long)currentTable->numPages;
-					finishedArray[processIndex] = 1;
-					finishedCount++;
-					break;
-				}
-
-				virtualPageNumber = (int)(entry.virAddr >> PAGE_OFFSET_BITS);
-				offset = (int)(entry.virAddr & PAGE_OFFSET_MASK);
-
-				entryIndex = searchPageByVir(currentTable, virtualPageNumber);
-
-				if (entryIndex >= 0) {
-					int physicalPageNumber;
-					unsigned int physicalAddress;
-
-					results->pageHits++;
-
-					physicalPageNumber = currentTable->pages[entryIndex].phyAddr;
-					physicalAddress =
-						 ((unsigned int)physicalPageNumber << PAGE_OFFSET_BITS) |
-						 (unsigned int)offset;
-					(void)physicalAddress;
-				} else {
-					int physicalPageNumber;
-
-					results->virtualPagesMapped++;
-
-					if (freePagesRemaining > 0) {
-						physicalPageNumber = (int)nextFreePhysicalPage;
-						nextFreePhysicalPage++;
-						freePagesRemaining--;
-
-						addPage(virtualPageNumber, physicalPageNumber, currentTable);
-						results->pagesFromFree++;
-						processes[processIndex]->numPagesAtTermination++;
-					} else {
-						int victimProcessIndex;
-						Process *victimProcess;
-						PageTable *victimTable;
-						results->pageFaults++;
-						victimProcessIndex = findVictimProcess(
-							 processes, finishedArray, numProcesses, nextEvictProcess);
-
-						if (victimProcessIndex < 0) {
-							free(finishedArray);
-							return 0;
-						}
-
-						victimProcess = processes[victimProcessIndex];
-						victimTable = victimProcess->processPageTable;
-
-						physicalPageNumber = victimTable->pages[0].phyAddr;
-
-						removePageByPhyAddr(physicalPageNumber, victimTable);
-						addPage(virtualPageNumber, physicalPageNumber, currentTable);
-                  processes[processIndex]->numPagesAtTermination++;
-
-						nextEvictProcess = (victimProcessIndex + 1) % numProcesses;
-					}
-				}
-
-				if (entry.instructionComplete) {
-					instructionsExecutedThisSlice++;
-				}
-			}
+			state->nextEvictProcess = (victimProcessIndex + 1) % numProcesses;
 		}
 	}
 
-	free(finishedArray);
 	return 1;
 }

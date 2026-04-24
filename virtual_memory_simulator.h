@@ -3,6 +3,7 @@
 
 #include "memory_calculations.h"
 #include "page_table.h"
+#include "trace_parser.h"
 
 typedef struct {
 	unsigned long long physicalPagesUsedBySystem;
@@ -13,8 +14,21 @@ typedef struct {
 	unsigned long long pageFaults;
 } MemorySimulationResults;
 
-int runVirtualMemorySimulation(Process **processes,
+typedef struct {
+	int *finishedArray;
+	int finishedCount;
+	int nextEvictProcess;
+	unsigned long long totalPhysicalPages;
+	unsigned long long systemPages;
+	unsigned long long pagesAvailableToUser;
+	unsigned long long freePagesRemaining;
+	unsigned long long nextFreePhysicalPage;
+} MemoryState;
+
+int runVirtualMemorySimulation(Process **processes, int processIndex,
 										 MemoryCalculationResults *pgTableParameters,
-										 int timeSlice, MemorySimulationResults *results);
+										 int timeSlice, MemorySimulationResults *results,
+										 MemoryState *state, TraceEntry entry,
+										 int numProcesses);
 
 #endif
