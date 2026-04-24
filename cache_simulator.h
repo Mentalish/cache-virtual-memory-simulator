@@ -4,15 +4,16 @@
 #include "page_table.h"
 
 typedef struct {
-   int totalAccesses;
-   int instructionBytes;
-   int destBytes;
-   int compulsoryMisses;
-   int conflictMisses;
-   int capacityMisses;
+	int totalAccesses;
+	int instructionBytes;
+	int destBytes;
+	int compulsoryMisses;
+	int conflictMisses;
+	int capacityMisses;
 } CacheSimulationResults;
 
 int runCacheSimulation(Process **processes, CacheOutput *cacheParameters,
-							  int timeSlice, CacheSimulationResults *results);
+							  int timeSlice, int numFiles,
+							  CacheSimulationResults *results);
 
 #endif
