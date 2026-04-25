@@ -1,5 +1,8 @@
 #include "cpu_cache.h"
 #include "address_parser.h"
+#include "cache_calculations.h"
+#include "error.h"
+#include "page_table.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -50,6 +53,22 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 		}
 	}
 	return foundEmpty ? COMPULSORY : CONFLICT; // index full
+}
+
+int flushCache(Cache *cachePtr, PageTable *processPtr) {
+	int i;
+   int currCacheCol;
+   int index;
+
+	for (i = 0; i < processPtr->numPages; i++) {
+      int currPhyAddr = processPtr->pages[i].phyAddr;
+      parseAddress(currPhyAddr, NULL, &index, NULL, cachePtr->tagSize, cachePtr->indexSize);
+
+      if(readCache(cachePtr, currPhyAddr, &currCacheCol) == NO_MISS) {
+         cachePtr->cacheBlocks[index][currCacheCol].validbit = 0;
+      }
+   }
+	return 0;
 }
 
 int freeCache(Cache *cachePtr) {
