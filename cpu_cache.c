@@ -43,6 +43,7 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 	for (i = 0; i < cachePtr->associativity; i++) {
 		if (tag == cachePtr->cacheBlocks[index][i].tag &&
 			 cachePtr->cacheBlocks[index][i].validbit == 1) {
+         *cacheCol = i;
 			return NO_MISS; // hit
 		} else if (cachePtr->cacheBlocks[index][i].validbit == 0) {
 			foundEmpty = true; // no data

@@ -2,8 +2,7 @@
 #define CPU_CACHE_H
 
 #include "cache_calculations.h"
-#include "cache_simulator.h"
-typedef enum { CAPACITY, CONFLICT, COMPULSORY, NO_MISS } MissType;
+#include "error.h"
 
 typedef struct {
 	int tag;
@@ -21,7 +20,7 @@ typedef struct {
 
 Cache *initCache(CacheInput cacheInputParameters, CacheOutput cacheCalcResults);
 MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol);
-MissType writeCache(Cache * cachePtr, int phyAddr);
+MissType writeCache(Cache *cachePtr, int phyAddr);
 int freeCache(Cache *cachePtr);
 
 #endif

@@ -30,7 +30,7 @@ runVirtualMemorySimulation(Process **processes, int processIndex,
 									MemoryCalculationResults *pgTableParameters,
 									int timeSlice, MemorySimulationResults *results,
 									MemoryState *state, TraceEntry entry,
-									int numProcesses, PagesAffected pagesAffected) {
+									int numProcesses, PagesAffected *pagesAffected) {
 	Process *currentProcess;
 	PageTable *currentTable;
 
@@ -76,9 +76,8 @@ runVirtualMemorySimulation(Process **processes, int processIndex,
 			state->freePagesRemaining--;
 
 			addPage(virtualPageNumber, physicalPageNumber, currentTable);
-			pagesAffected.added =
-				 &processes[processIndex]->processPageTable->pages
-						[processes[processIndex]->processPageTable->numPages - 1];
+			pagesAffected->addedIdx =
+				 processes[processIndex]->processPageTable->numPages - 1;
 			results->pagesFromFree++;
 			processes[processIndex]->numPagesAtTermination++;
 		} else {
@@ -107,10 +106,9 @@ runVirtualMemorySimulation(Process **processes, int processIndex,
 			addPage(virtualPageNumber, physicalPageNumber, currentTable);
 			processes[processIndex]->numPagesAtTermination++;
 
-			pagesAffected.added =
-				 &processes[processIndex]->processPageTable->pages
-						[processes[processIndex]->processPageTable->numPages - 1];
-         pagesAffected.removed = &processes[processIndex]->processPageTable->pages[removedPageIndex];
+			pagesAffected->addedIdx =
+				 processes[processIndex]->processPageTable->numPages - 1;
+			pagesAffected->removedIdx = removedPageIndex;
 
 			state->nextEvictProcess = (victimProcessIndex + 1) % numProcesses;
 		}

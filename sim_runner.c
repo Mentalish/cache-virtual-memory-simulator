@@ -78,7 +78,7 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 	while (state.finishedCount < numProcesses) {
 		int processIndex;
 		PageTable *currentTable;
-      PageTableEntry *effectedPage;
+		PagesAffected affectedPages = {0};
 
 		for (processIndex = 0; processIndex < numProcesses; processIndex++) {
 			Process *currentProcess;
@@ -108,7 +108,7 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 
 				memStatus = runVirtualMemorySimulation(
 					 processes, processIndex, memResults, parameters->timeSlice,
-					 memSimResults, &state, entry, numProcesses);
+					 memSimResults, &state, entry, numProcesses, &affectedPages);
 
 				switch (memStatus) {
 				case PROC_SKIP:

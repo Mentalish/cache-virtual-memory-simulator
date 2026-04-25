@@ -26,8 +26,8 @@ typedef struct {
 } MemoryState;
 
 typedef struct {
-	PageTableEntry *added;
-	PageTableEntry *removed;
+   int addedIdx;
+	int removedIdx;
 } PagesAffected;
 
 typedef enum {
@@ -42,6 +42,6 @@ runVirtualMemorySimulation(Process **processes, int processIndex,
 									MemoryCalculationResults *pgTableParameters,
 									int timeSlice, MemorySimulationResults *results,
 									MemoryState *state, TraceEntry entry,
-									int numProcesses, PagesAffected pagesAffected);
+									int numProcesses, PagesAffected *pagesAffected);
 
 #endif
