@@ -1,9 +1,12 @@
 #include "cpu_cache.h"
 #include "address_parser.h"
+#include "cache_calculations.h"
+#include "error.h"
+#include "page_table.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
-Cache *initCache(CacheInput cacheInputParameters,
+Cache *initCache(int associativity,
 					  CacheOutput cacheCalcResults) {
 	int i;
 	Cache *newCache = malloc(sizeof(Cache));
@@ -13,7 +16,7 @@ Cache *initCache(CacheInput cacheInputParameters,
 	}
 
 	newCache->rows = cacheCalcResults.total_rows;
-	newCache->associativity = cacheInputParameters.associativity;
+	newCache->associativity = associativity;
 	newCache->indexSize = cacheCalcResults.index_size;
 	newCache->tagSize = cacheCalcResults.tag_size;
 
@@ -43,6 +46,7 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 	for (i = 0; i < cachePtr->associativity; i++) {
 		if (tag == cachePtr->cacheBlocks[index][i].tag &&
 			 cachePtr->cacheBlocks[index][i].validbit == 1) {
+			*cacheCol = i;
 			return NO_MISS; // hit
 		} else if (cachePtr->cacheBlocks[index][i].validbit == 0) {
 			foundEmpty = true; // no data
@@ -51,27 +55,20 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 	return foundEmpty ? COMPULSORY : CONFLICT; // index full
 }
 
-MissType writeCache(Cache *cachePtr, int phyAddr) {
-	int tag;
-	int index;
-	int offset;
+int flushCache(Cache *cachePtr, PageTable *processPtr) {
 	int i;
-   bool foundEmpty = false;
+   int currCacheCol;
+   int index;
 
-	parseAddress(phyAddr, &tag, &index, &offset, cachePtr->tagSize,
-					 cachePtr->indexSize);
+	for (i = 0; i < processPtr->numPages; i++) {
+      int currPhyAddr = processPtr->pages[i].phyAddr;
+      parseAddress(currPhyAddr, NULL, &index, NULL, cachePtr->tagSize, cachePtr->indexSize);
 
-	for (i = 0; i < cachePtr->associativity; i++) {
-		if (tag == cachePtr->cacheBlocks[index][i].tag &&
-			 cachePtr->cacheBlocks[index][i].validbit == 1) {
-			return NO_MISS; // hit
-         cachePtr->cacheBlocks[index][i].dirtybit = 1;
-		} else if (cachePtr->cacheBlocks[index][i].validbit == 0) {
-			foundEmpty = true; // no data
-		}
-	}
-
-	return foundEmpty ? COMPULSORY : CONFLICT;
+      if(readCache(cachePtr, currPhyAddr, &currCacheCol) == NO_MISS) {
+         cachePtr->cacheBlocks[index][currCacheCol].validbit = 0;
+      }
+   }
+	return 0;
 }
 
 int freeCache(Cache *cachePtr) {

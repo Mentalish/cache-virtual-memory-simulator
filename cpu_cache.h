@@ -2,8 +2,8 @@
 #define CPU_CACHE_H
 
 #include "cache_calculations.h"
-#include "cache_simulator.h"
-typedef enum { CAPACITY, CONFLICT, COMPULSORY, NO_MISS } MissType;
+#include "error.h"
+#include "page_table.h"
 
 typedef struct {
 	int tag;
@@ -19,9 +19,11 @@ typedef struct {
 	CacheBlock **cacheBlocks;
 } Cache;
 
-Cache *initCache(CacheInput cacheInputParameters, CacheOutput cacheCalcResults);
+Cache *initCache(int associativity, CacheOutput cacheCalcResults);
 MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol);
-MissType writeCache(Cache * cachePtr, int phyAddr);
+int flushCache(Cache *cachePtr,
+					PageTable *processPtr); /* flush all cache entries associated
+													 with a process */
 int freeCache(Cache *cachePtr);
 
 #endif

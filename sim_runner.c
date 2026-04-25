@@ -1,15 +1,20 @@
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "cache_calculations.h"
 #include "cache_simulator.h"
+#include "cpu_cache.h"
 #include "page_table.h"
 #include "sim_runner.h"
+#include "trace_parser.h"
 #include "virtual_memory_simulator.h"
 
+#define INITIAL_EVICT_PROCESS 0
+
 int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
-						CacheOutput *cacheResults,
-						MemorySimulationResults *memSimResults, CacheSimulationResults * cacheSimResults, Process **processes) {
+						int associativity, CacheOutput *cacheResults,
+						MemorySimulationResults *memSimResults,
+						CacheSimulationResults *cacheSimResults,
+						Process **processes) {
 
 	int i;
 
@@ -35,20 +40,102 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 		}
 	}
 
-	runVirtualMemorySimulation(processes, memResults, parameters->timeSlice,
-										memSimResults);
+	Cache *cache = initCache(associativity, *cacheResults);
 
-	// Prep processes for cache simulation
-	for (i = 0; i < parameters->files.numFiles; i++) {
-		if (parameters->files.files[i].filePtr != NULL) {
-			rewind(parameters->files.files[i].filePtr);
-		}
+	// simulation loop
+	MemoryState state = {0};
+	int numProcesses = parameters->files.numFiles;
+	int instructionsExecutedThisSlice;
+	int timeSlice = parameters->timeSlice;
+
+	state.finishedArray = calloc(numProcesses, sizeof(int));
+	if (state.finishedArray == NULL) {
+		return 0;
 	}
 
-	runCacheSimulation(processes, cacheResults, parameters->timeSlice,
-							 cacheSimResults);
+	state.totalPhysicalPages = memResults->number_physical_pages;
+	state.systemPages = memResults->number_pages_for_system;
+	state.pagesAvailableToUser = state.totalPhysicalPages - state.systemPages;
+	state.freePagesRemaining = state.pagesAvailableToUser;
+	state.nextFreePhysicalPage = state.systemPages;
+	state.nextEvictProcess = INITIAL_EVICT_PROCESS;
+	state.finishedCount = 0;
 
-		 return 0;
+	memSimResults->physicalPagesUsedBySystem = state.systemPages;
+	memSimResults->pagesAvaibletoUser = state.pagesAvailableToUser;
+	memSimResults->virtualPagesMapped = 0;
+	memSimResults->pageHits = 0;
+	memSimResults->pagesFromFree = 0;
+	memSimResults->pageFaults = 0;
+
+	if (processes == NULL || cacheResults == NULL || memSimResults == NULL) {
+		return 1;
+	}
+
+	numProcesses = memResults->num_trace_files;
+
+	if (numProcesses <= 0) {
+		return 0;
+	}
+
+	while (state.finishedCount < numProcesses) {
+		int processIndex;
+		PageTable *currentTable;
+		PagesAffected affectedPages = {0};
+
+		for (processIndex = 0; processIndex < numProcesses; processIndex++) {
+			Process *currentProcess;
+			currentProcess = processes[processIndex];
+
+			if (currentProcess == NULL ||
+				 currentProcess->processPageTable == NULL) {
+				state.finishedCount++;
+				continue;
+			}
+
+			currentTable = currentProcess->processPageTable;
+			instructionsExecutedThisSlice = 0;
+
+			while (timeSlice == -1 || instructionsExecutedThisSlice < timeSlice) {
+				TraceEntry entry;
+				MemoryReturnStatus memStatus;
+
+				// get next instruction
+				if (!getNextTraceEntry(currentProcess->tracefile, &entry)) {
+					state.freePagesRemaining +=
+						 (unsigned long long)currentTable->numPages;
+					state.finishedArray[processIndex] = 1;
+					state.finishedCount++;
+					break;
+				}
+
+				memStatus = runVirtualMemorySimulation(
+					 processes, processIndex, memResults, parameters->timeSlice,
+					 memSimResults, &state, entry, numProcesses, &affectedPages);
+
+				switch (memStatus) {
+				case PROC_SKIP:
+					continue;
+					break;
+				case PROC_FINISHED: // invalidate cache entries
+					break;
+				case ERR:
+					return 1;
+					break;
+				case SUCCESS:
+					// do nothing
+					break;
+				}
+				runCacheSimulation(cache, cacheResults, cacheSimResults,
+										 currentTable->pages[affectedPages.addedIdx].phyAddr, entry.operation);
+				if (entry.instructionComplete) {
+					instructionsExecutedThisSlice++;
+				}
+			}
+		}
+	}
+	free(state.finishedArray);
+	return 0;
 }
 
 int freeProcesses(int numFiles, Process **processes) {

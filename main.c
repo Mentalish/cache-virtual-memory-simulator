@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	printCalculationResults(12, parameters, cache_results, memResults);
 	Process **processes =
 		 calloc(parameters->files.numFiles + 1, sizeof(Process *));
-	runSimulation(parameters, &memResults, &cache_results, &memSimResults,
+	runSimulation(parameters, &memResults, parameters->associativity, &cache_results, &memSimResults,
 					  &cacheSimResults, processes);
 	printVirMemorySimulationResults(memSimResults, processes,
 											  parameters->files.numFiles);

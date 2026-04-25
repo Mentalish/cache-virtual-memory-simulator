@@ -1,18 +1,20 @@
 #ifndef CACHE_SIMULATOR_H
 #define CACHE_SIMULATOR_H
+
 #include "cache_calculations.h"
-#include "page_table.h"
+#include "cpu_cache.h"
+#include "error.h"
 
 typedef struct {
-   int totalAccesses;
-   int instructionBytes;
-   int destBytes;
-   int compulsoryMisses;
-   int conflictMisses;
-   int capacityMisses;
+	int totalAccesses;
+	int instructionBytes;
+	int destBytes;
+	int compulsoryMisses;
+	int conflictMisses;
+	int capacityMisses;
 } CacheSimulationResults;
 
-int runCacheSimulation(Process **processes, CacheOutput *cacheParameters,
-							  int timeSlice, CacheSimulationResults *results);
-
+MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
+							  CacheSimulationResults *results, int phyAddr,
+							  char instType);
 #endif

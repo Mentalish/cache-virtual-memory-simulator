@@ -9,7 +9,7 @@
 #include "virtual_memory_simulator.h"
 
 int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
-						CacheOutput *cacheResults,
+						int associativity, CacheOutput *cacheResults,
 						MemorySimulationResults *memSimResults,
 						CacheSimulationResults *cacheSimResults, Process **Processes);
 
