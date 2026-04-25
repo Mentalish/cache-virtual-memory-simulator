@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-Cache *initCache(CacheInput cacheInputParameters,
+Cache *initCache(int associativity,
 					  CacheOutput cacheCalcResults) {
 	int i;
 	Cache *newCache = malloc(sizeof(Cache));
@@ -16,7 +16,7 @@ Cache *initCache(CacheInput cacheInputParameters,
 	}
 
 	newCache->rows = cacheCalcResults.total_rows;
-	newCache->associativity = cacheInputParameters.associativity;
+	newCache->associativity = associativity;
 	newCache->indexSize = cacheCalcResults.index_size;
 	newCache->tagSize = cacheCalcResults.tag_size;
 

@@ -2,6 +2,7 @@
 
 #include "cache_calculations.h"
 #include "cache_simulator.h"
+#include "cpu_cache.h"
 #include "page_table.h"
 #include "sim_runner.h"
 #include "trace_parser.h"
@@ -10,7 +11,7 @@
 #define INITIAL_EVICT_PROCESS 0
 
 int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
-						CacheOutput *cacheResults,
+						int associativity, CacheOutput *cacheResults,
 						MemorySimulationResults *memSimResults,
 						CacheSimulationResults *cacheSimResults,
 						Process **processes) {
@@ -38,6 +39,8 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 			return 1;
 		}
 	}
+
+	Cache *cache = initCache(associativity, *cacheResults);
 
 	// simulation loop
 	MemoryState state = {0};
@@ -123,7 +126,8 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 					// do nothing
 					break;
 				}
-
+				runCacheSimulation(cache, cacheResults, cacheSimResults,
+										 currentTable->pages[affectedPages.addedIdx].phyAddr, entry.operation);
 				if (entry.instructionComplete) {
 					instructionsExecutedThisSlice++;
 				}

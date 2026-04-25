@@ -19,7 +19,7 @@ typedef struct {
 	CacheBlock **cacheBlocks;
 } Cache;
 
-Cache *initCache(CacheInput cacheInputParameters, CacheOutput cacheCalcResults);
+Cache *initCache(int associativity, CacheOutput cacheCalcResults);
 MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol);
 int flushCache(Cache *cachePtr,
 					PageTable *processPtr); /* flush all cache entries associated

@@ -5,15 +5,6 @@
 #include "trace_parser.h"
 
 typedef struct {
-	unsigned int cache_size_kb;
-	unsigned int block_size;
-	unsigned int associativity;
-	unsigned int physical_memory_mb;
-	double percent_memory_used_by_system;
-	unsigned int trace_file_count;
-} CacheInput;
-
-typedef struct {
 	unsigned long long total_blocks;
 	unsigned long long total_rows;
 	unsigned int tag_size;
