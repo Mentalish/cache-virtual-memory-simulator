@@ -1,4 +1,5 @@
 #include "cache_simulator.h"
+#include "address_parser.h"
 #include "cpu_cache.h"
 #include "error.h"
 
@@ -7,11 +8,14 @@ MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
 									 char instType) {
 	MissType missType;
 	int cacheCol = 0;
-	CacheBlock *affectedBlock;
+	int tag;
+	int index;
+	int offset;
 
+	parseAddress(phyAddr, &tag, &index, &offset, cacheParameters->tag_size,
+					 cacheParameters->index_size);
+	missType = readCache(cachePtr, phyAddr, &cacheCol);
 	if (instType == 'R') {
-		missType = readCache(cachePtr, phyAddr, &cacheCol);
-
 		switch (missType) {
 		case CONFLICT:
 			break;
@@ -22,10 +26,7 @@ MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
 		case NO_MISS:
 			break;
 		}
-
 	} else {
-		missType = writeCache(cachePtr, phyAddr);
-
 		switch (missType) {
 		case CONFLICT:
 			break;

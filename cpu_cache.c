@@ -43,36 +43,13 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 	for (i = 0; i < cachePtr->associativity; i++) {
 		if (tag == cachePtr->cacheBlocks[index][i].tag &&
 			 cachePtr->cacheBlocks[index][i].validbit == 1) {
-         *cacheCol = i;
+			*cacheCol = i;
 			return NO_MISS; // hit
 		} else if (cachePtr->cacheBlocks[index][i].validbit == 0) {
 			foundEmpty = true; // no data
 		}
 	}
 	return foundEmpty ? COMPULSORY : CONFLICT; // index full
-}
-
-MissType writeCache(Cache *cachePtr, int phyAddr) {
-	int tag;
-	int index;
-	int offset;
-	int i;
-   bool foundEmpty = false;
-
-	parseAddress(phyAddr, &tag, &index, &offset, cachePtr->tagSize,
-					 cachePtr->indexSize);
-
-	for (i = 0; i < cachePtr->associativity; i++) {
-		if (tag == cachePtr->cacheBlocks[index][i].tag &&
-			 cachePtr->cacheBlocks[index][i].validbit == 1) {
-			return NO_MISS; // hit
-         cachePtr->cacheBlocks[index][i].dirtybit = 1;
-		} else if (cachePtr->cacheBlocks[index][i].validbit == 0) {
-			foundEmpty = true; // no data
-		}
-	}
-
-	return foundEmpty ? COMPULSORY : CONFLICT;
 }
 
 int freeCache(Cache *cachePtr) {

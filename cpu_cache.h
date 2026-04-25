@@ -20,7 +20,6 @@ typedef struct {
 
 Cache *initCache(CacheInput cacheInputParameters, CacheOutput cacheCalcResults);
 MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol);
-MissType writeCache(Cache *cachePtr, int phyAddr);
 int freeCache(Cache *cachePtr);
 
 #endif
