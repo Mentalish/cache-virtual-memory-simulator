@@ -24,6 +24,6 @@ typedef struct {
 	double cost;
 } CacheOutput;
 
-int calculate_cache(const Parameters *input, CacheOutput *output, TraceEntry entry);
+int calculate_cache(const Parameters *input, CacheOutput *output);
 
 #endif
