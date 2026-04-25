@@ -85,11 +85,11 @@ int addPage(int virAddr, int phyAddr, PageTable *pageTablePtr) {
 
 	return 0;
 }
-bool removePageByVirAddr(int virAddr, PageTable *pageTablePtr) {
+int removePageByVirAddr(int virAddr, PageTable *pageTablePtr) {
 	int ind = searchPageByVir(pageTablePtr, virAddr);
 
 	if (ind < 0) {
-		return false; /* no page to free */
+		return -1; /* no page to free */
 	}
 
 	pageTablePtr->pages[ind].virAddr = 0;
@@ -98,13 +98,13 @@ bool removePageByVirAddr(int virAddr, PageTable *pageTablePtr) {
 	pageTablePtr->pages->dirtyBit = false;
 	pageTablePtr->numPages--;
 	shiftPageTable(pageTablePtr, ind);
-	return true;
+	return ind;
 }
-bool removePageByPhyAddr(int phyAddr, PageTable *pageTablePtr) {
+int removePageByPhyAddr(int phyAddr, PageTable *pageTablePtr) {
 	int ind = searchPageByPhy(pageTablePtr, phyAddr);
 
 	if (ind < 0) {
-		return false; /* no page to free */
+		return -1; /* no page to free */
 	}
 
 	pageTablePtr->pages[ind].virAddr = 0;
@@ -113,7 +113,7 @@ bool removePageByPhyAddr(int phyAddr, PageTable *pageTablePtr) {
 	pageTablePtr->pages[ind].dirtyBit = false;
 	shiftPageTable(pageTablePtr, ind);
    pageTablePtr->numPages--;
-	return true;
+	return ind;
 }
 int freeProcessPageTable(Process *processPtr) {
 	if (processPtr == NULL) {

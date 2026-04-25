@@ -78,6 +78,7 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 	while (state.finishedCount < numProcesses) {
 		int processIndex;
 		PageTable *currentTable;
+      PageTableEntry *effectedPage;
 
 		for (processIndex = 0; processIndex < numProcesses; processIndex++) {
 			Process *currentProcess;

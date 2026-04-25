@@ -25,11 +25,12 @@ static int findVictimProcess(Process **processes, int *finishedArray,
 	return -1;
 }
 
-MemoryReturnStatus runVirtualMemorySimulation(Process **processes, int processIndex,
-										 MemoryCalculationResults *pgTableParameters,
-										 int timeSlice, MemorySimulationResults *results,
-										 MemoryState *state, TraceEntry entry,
-										 int numProcesses) {
+MemoryReturnStatus
+runVirtualMemorySimulation(Process **processes, int processIndex,
+									MemoryCalculationResults *pgTableParameters,
+									int timeSlice, MemorySimulationResults *results,
+									MemoryState *state, TraceEntry entry,
+									int numProcesses, PagesAffected pagesAffected) {
 	Process *currentProcess;
 	PageTable *currentTable;
 
@@ -75,12 +76,17 @@ MemoryReturnStatus runVirtualMemorySimulation(Process **processes, int processIn
 			state->freePagesRemaining--;
 
 			addPage(virtualPageNumber, physicalPageNumber, currentTable);
+			pagesAffected.added =
+				 &processes[processIndex]->processPageTable->pages
+						[processes[processIndex]->processPageTable->numPages - 1];
 			results->pagesFromFree++;
 			processes[processIndex]->numPagesAtTermination++;
 		} else {
 			int victimProcessIndex;
+			int removedPageIndex;
 			Process *victimProcess;
 			PageTable *victimTable;
+
 			results->pageFaults++;
 			victimProcessIndex =
 				 findVictimProcess(processes, state->finishedArray, numProcesses,
@@ -96,9 +102,15 @@ MemoryReturnStatus runVirtualMemorySimulation(Process **processes, int processIn
 
 			physicalPageNumber = victimTable->pages[0].phyAddr;
 
-			removePageByPhyAddr(physicalPageNumber, victimTable);
+			removedPageIndex =
+				 removePageByPhyAddr(physicalPageNumber, victimTable);
 			addPage(virtualPageNumber, physicalPageNumber, currentTable);
 			processes[processIndex]->numPagesAtTermination++;
+
+			pagesAffected.added =
+				 &processes[processIndex]->processPageTable->pages
+						[processes[processIndex]->processPageTable->numPages - 1];
+         pagesAffected.removed = &processes[processIndex]->processPageTable->pages[removedPageIndex];
 
 			state->nextEvictProcess = (victimProcessIndex + 1) % numProcesses;
 		}

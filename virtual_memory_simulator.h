@@ -25,17 +25,23 @@ typedef struct {
 	unsigned long long nextFreePhysicalPage;
 } MemoryState;
 
+typedef struct {
+	PageTableEntry *added;
+	PageTableEntry *removed;
+} PagesAffected;
+
 typedef enum {
-   PROC_SKIP,
-   PROC_FINISHED,
-   ERR,
-   SUCCESS,
+	PROC_SKIP,
+	PROC_FINISHED,
+	ERR,
+	SUCCESS,
 } MemoryReturnStatus;
 
-MemoryReturnStatus runVirtualMemorySimulation(Process **processes, int processIndex,
-										 MemoryCalculationResults *pgTableParameters,
-										 int timeSlice, MemorySimulationResults *results,
-										 MemoryState *state, TraceEntry entry,
-										 int numProcesses);
+MemoryReturnStatus
+runVirtualMemorySimulation(Process **processes, int processIndex,
+									MemoryCalculationResults *pgTableParameters,
+									int timeSlice, MemorySimulationResults *results,
+									MemoryState *state, TraceEntry entry,
+									int numProcesses, PagesAffected pagesAffected);
 
 #endif
