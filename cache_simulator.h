@@ -13,6 +13,8 @@ typedef struct {
 	int compulsoryMisses;
 	int conflictMisses;
 	int capacityMisses;
+	int totalCycles;
+    int totalInstructions;
 } CacheSimulationResults;
 
 MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
