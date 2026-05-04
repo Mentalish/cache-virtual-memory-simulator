@@ -140,6 +140,7 @@ void printCacheSimulationResults(CacheSimulationResults results, CacheOutput cac
     double unusedKB;
     double wasteCost;
     double unusedPercent;
+	double cpi;
 
     totalMisses = results.compulsoryMisses +
                   results.conflictMisses +
@@ -154,6 +155,12 @@ void printCacheSimulationResults(CacheSimulationResults results, CacheOutput cac
         hitRate = 0.0;
         missRate = 0.0;
     }
+
+	if (results.totalInstructions > 0) {
+    cpi = (double)results.totalCycles / results.totalInstructions;
+} else {
+    cpi = 0.0;
+}
 
     unusedBlocks = cacheCalc.total_blocks - results.compulsoryMisses;
 
@@ -191,6 +198,11 @@ void printCacheSimulationResults(CacheSimulationResults results, CacheOutput cac
 
     printf("%-24s %.4f%%\n", "Hit  Rate:", hitRate);
     printf("%-24s %.4f%%\n", "Miss Rate:", missRate);
+
+	printf("%-24s %.2f Cycles/Instruction  (%d)\n",
+       "CPI:",
+       cpi,
+       results.totalCycles);
 
     printf("%-24s %.2f KB / %.2f KB = %.2f%%  Waste: $%.2f/chip\n",
            "Unused Cache Space:",
