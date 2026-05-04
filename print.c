@@ -131,3 +131,76 @@ void printVirMemorySimulationResults(MemorySimulationResults simResults,
 
 	printf("\n");
 }
+void printCacheSimulationResults(CacheSimulationResults results, CacheOutput cacheCalc) {
+    int totalMisses;
+    int totalHits;
+    double hitRate;
+    double missRate;
+    int unusedBlocks;
+    double unusedKB;
+    double wasteCost;
+    double unusedPercent;
+
+    totalMisses = results.compulsoryMisses +
+                  results.conflictMisses +
+                  results.capacityMisses;
+
+    totalHits = results.totalAccesses - totalMisses;
+
+    if (results.totalAccesses > 0) {
+        hitRate = ((double)totalHits * 100.0) / results.totalAccesses;
+        missRate = ((double)totalMisses * 100.0) / results.totalAccesses;
+    } else {
+        hitRate = 0.0;
+        missRate = 0.0;
+    }
+
+    unusedBlocks = cacheCalc.total_blocks - results.compulsoryMisses;
+
+    if (unusedBlocks < 0) {
+        unusedBlocks = 0;
+    }
+
+    unusedKB = ((double)unusedBlocks *
+               ((double)cacheCalc.implementation_memory_size_bytes /
+                (double)cacheCalc.total_blocks)) / 1024.0;
+
+    wasteCost = unusedKB * 0.07;
+
+    if (cacheCalc.implementation_memory_size_kb > 0) {
+        unusedPercent = (unusedKB / cacheCalc.implementation_memory_size_kb) * 100.0;
+    } else {
+        unusedPercent = 0.0;
+    }
+
+    printf("\nMILESTONE #3: - Cache Simulation Results\n\n");
+
+    printf("***** CACHE SIMULATION RESULTS *****\n\n");
+
+    printf("%-24s %d\n", "Total Cache Accesses:", results.totalAccesses);
+    printf("--- Instruction Bytes:   %d\n", results.instructionBytes);
+    printf("--- SrcDst Bytes:        %d\n", results.destBytes);
+
+    printf("%-24s %d\n", "Cache Hits:", totalHits);
+    printf("%-24s %d\n", "Cache Misses:", totalMisses);
+    printf("--- Compulsory Misses:   %d\n", results.compulsoryMisses);
+    printf("--- Conflict Misses:     %d\n", results.conflictMisses);
+    printf("--- Capacity Misses:     %d\n", results.capacityMisses);
+
+    printf("\n\n***** *****  CACHE HIT & MISS RATE:  ***** *****\n\n");
+
+    printf("%-24s %.4f%%\n", "Hit  Rate:", hitRate);
+    printf("%-24s %.4f%%\n", "Miss Rate:", missRate);
+
+    printf("%-24s %.2f KB / %.2f KB = %.2f%%  Waste: $%.2f/chip\n",
+           "Unused Cache Space:",
+           unusedKB,
+           cacheCalc.implementation_memory_size_kb,
+           unusedPercent,
+           wasteCost);
+
+    printf("%-24s %d / %llu\n",
+           "Unused Cache Blocks:",
+           unusedBlocks,
+           cacheCalc.total_blocks);
+}
