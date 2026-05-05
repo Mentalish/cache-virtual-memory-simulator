@@ -1,8 +1,8 @@
 #include "cache_simulator.h"
 #include "address_parser.h"
-#include "cpu_cache.h"
 #include "cache_replace.h"
 #include "cmd_parser.h"
+#include "cpu_cache.h"
 #include "error.h"
 
 static void replaceCacheBlock(Cache *cachePtr, ReplacementPolicy policy,
@@ -15,8 +15,9 @@ static void replaceCacheBlock(Cache *cachePtr, ReplacementPolicy policy,
 }
 
 MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
-									  CacheSimulationResults *results, int phyAddr,
-									  char instType, ReplacementPolicy policy, int blockSize) {
+									 CacheSimulationResults *results, int phyAddr,
+									 char instType, ReplacementPolicy policy,
+									 int blockSize) {
 	MissType missType;
 	int cacheCol = 0;
 	int tag;
@@ -33,22 +34,22 @@ MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
 	missType = readCache(cachePtr, phyAddr, &cacheCol);
 
 	if (missType == NO_MISS) {
-    results->totalCycles += 1;
-} else {
-    int memoryReads = (blockSize + 3) / 4;
-    results->totalCycles += 4 * memoryReads;
-}
+		results->totalCycles += 1;
+	} else {
+		int memoryReads = (blockSize + 3) / 4;
+		results->totalCycles += 4 * memoryReads;
+	}
 
 	results->totalAccesses++;
-      
-if (instType == 'R') {
-    results->instructionBytes += cacheParameters->block_size;
-    results->totalInstructions++;
-    results->totalCycles += 2;
-} else {
-    results->destBytes += cacheParameters->block_size;
-    results->totalCycles += 1;
-}
+
+	if (instType == 'R') {
+		results->instructionBytes += blockSize;
+		results->totalInstructions++;
+		results->totalCycles += 2;
+	} else {
+		results->destBytes += blockSize;
+		results->totalCycles += 1;
+	}
 
 	switch (missType) {
 	case CONFLICT:
