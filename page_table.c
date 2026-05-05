@@ -14,7 +14,7 @@ Process *InitProcessPageTable(int initialSize, int maxCapacity, FILE *traceFile,
 
 	processPtr->tracefile = traceFile;
 	processPtr->fileName = name;
-   processPtr->numPagesAtTermination = 0;
+	processPtr->numPagesAtTermination = 0;
 	processPtr->processPageTable = malloc(sizeof(PageTable));
 
 	/*check if allocation failed*/
@@ -112,7 +112,7 @@ int removePageByPhyAddr(int phyAddr, PageTable *pageTablePtr) {
 	pageTablePtr->pages[ind].validBit = false;
 	pageTablePtr->pages[ind].dirtyBit = false;
 	shiftPageTable(pageTablePtr, ind);
-   pageTablePtr->numPages--;
+	pageTablePtr->numPages--;
 	return ind;
 }
 int freeProcessPageTable(Process *processPtr) {

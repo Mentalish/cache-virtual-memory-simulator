@@ -4,7 +4,9 @@
 #include "cpu_cache.h"
 
 /* return index of cache replaced*/
-int roundRobinReplace(Cache *cachePtr, int index, int tag, int offset);
-int randomReplace(Cache *cachePtr, int index, int tag, int offset);
+int roundRobinReplace(Cache *cachePtr, unsigned int index, unsigned int tag,
+							 unsigned int offset);
+int randomReplace(Cache *cachePtr, unsigned int index, unsigned int tag,
+						unsigned int offset);
 
 #endif

@@ -3,6 +3,7 @@
 #include "cache_calculations.h"
 #include "error.h"
 #include "page_table.h"
+#include "virtual_memory_simulator.h"
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -55,9 +56,9 @@ Cache *initCache(int associativity, CacheOutput cacheCalcResults) {
 }
 
 MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
-	int tag;
-	int index;
-	int offset;
+	unsigned int tag;
+	unsigned int index;
+	unsigned int offset;
 	int i;
 	bool foundEmpty = false;
 
@@ -70,8 +71,10 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 			*cacheCol = i;
 			return NO_MISS;
 		} else if (cachePtr->cacheBlocks[index][i].validbit == 0) {
-			*cacheCol = i;
-			foundEmpty = true;
+			if (!foundEmpty) {
+				*cacheCol = i;
+				foundEmpty = true;
+			}
 		}
 	}
 
@@ -80,21 +83,28 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 
 int flushCache(Cache *cachePtr, PageTable *processPtr) {
 	int i;
+	int j;
 	int currCacheCol;
-	int index;
+	unsigned int index;
+   unsigned int tag;
+   unsigned int offset;
 
 	if (cachePtr == NULL || processPtr == NULL) {
 		return 1;
 	}
 
 	for (i = 0; i < processPtr->numPages; i++) {
-		int currPhyAddr = processPtr->pages[i].phyAddr;
+		unsigned int PPN = processPtr->pages[i].phyAddr;
+		unsigned int basePhyAddr = (PPN << PAGE_OFFSET_BITS);
 
-		parseAddress(currPhyAddr, NULL, &index, NULL, cachePtr->tagSize,
-						 cachePtr->indexSize);
+		for (j = 0; j < 4096; j++) {
+         unsigned int currPhyAddr = basePhyAddr + j;
+			parseAddress(currPhyAddr, &tag, &index, &offset, cachePtr->tagSize,
+							 cachePtr->indexSize);
 
-		if (readCache(cachePtr, currPhyAddr, &currCacheCol) == NO_MISS) {
-			cachePtr->cacheBlocks[index][currCacheCol].validbit = 0;
+			if (readCache(cachePtr, currPhyAddr, &currCacheCol) == NO_MISS) {
+				cachePtr->cacheBlocks[index][currCacheCol].validbit = 0;
+			}
 		}
 	}
 

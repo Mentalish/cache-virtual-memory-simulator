@@ -6,7 +6,7 @@
 #include "page_table.h"
 
 typedef struct {
-	int tag;
+	unsigned int tag;
 	int validbit;
 	int dirtybit;
 } CacheBlock;
