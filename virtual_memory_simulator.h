@@ -1,9 +1,13 @@
 #ifndef VIRTUAL_MEMORY_SIMULATOR_H
 #define VIRTUAL_MEMORY_SIMULATOR_H
 
+#define PAGE_OFFSET_BITS 12U
+#define PAGE_OFFSET_MASK 0xFFFU
+
 #include "memory_calculations.h"
 #include "page_table.h"
 #include "trace_parser.h"
+#include "cpu_cache.h"
 
 typedef struct {
 	unsigned long long physicalPagesUsedBySystem;
@@ -26,7 +30,7 @@ typedef struct {
 } MemoryState;
 
 typedef struct {
-   int addedIdx;
+	int addedIdx;
 	int removedIdx;
 } PagesAffected;
 
@@ -42,6 +46,6 @@ runVirtualMemorySimulation(Process **processes, int processIndex,
 									MemoryCalculationResults *pgTableParameters,
 									int timeSlice, MemorySimulationResults *results,
 									MemoryState *state, TraceEntry entry,
-									int numProcesses, PagesAffected *pagesAffected);
+									int numProcesses, PagesAffected *pagesAffected, Cache *cachePtr);
 
 #endif

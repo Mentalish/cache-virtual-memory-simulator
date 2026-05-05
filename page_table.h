@@ -5,8 +5,8 @@
 #include <stdio.h>
 
 typedef struct {
-	int phyAddr; /* physical page number */
-	int virAddr; /* virtual page number */
+	unsigned int phyAddr; /* physical page number */
+	unsigned int virAddr; /* virtual page number */
 	bool validBit;
 	bool dirtyBit;
 } PageTableEntry;
@@ -21,7 +21,7 @@ typedef struct {
 typedef struct {
 	char *fileName;
 	FILE *tracefile;
-   int numPagesAtTermination;
+	int numPagesAtTermination;
 	PageTable *processPageTable;
 } Process;
 

@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 /*** return index/column of cache block replaced *****/
-int roundRobinReplace(Cache *cachePtr, int index, int tag, int offset) {
+int roundRobinReplace(Cache *cachePtr, unsigned int index, unsigned int tag,
+							 unsigned int offset) {
 	int victimCol;
 
 	(void)offset;
@@ -24,7 +25,8 @@ int roundRobinReplace(Cache *cachePtr, int index, int tag, int offset) {
 }
 
 /*** return index/column of cache block replaced ****/
-int randomReplace(Cache *cachePtr, int index, int tag, int offset) {
+int randomReplace(Cache *cachePtr, unsigned int index, unsigned int tag,
+						unsigned int offset) {
 	int victimCol;
 
 	(void)offset;

@@ -82,7 +82,6 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 
 		for (processIndex = 0; processIndex < numProcesses; processIndex++) {
 			Process *currentProcess;
-
 			currentProcess = processes[processIndex];
 
 			if (state.finishedArray[processIndex]) {
@@ -113,28 +112,30 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 
 				memStatus = runVirtualMemorySimulation(
 					 processes, processIndex, memResults, parameters->timeSlice,
-					 memSimResults, &state, entry, numProcesses, &affectedPages);
+					 memSimResults, &state, entry, numProcesses, &affectedPages, cache);
 
 				switch (memStatus) {
 				case PROC_SKIP:
 					continue;
-
 				case PROC_FINISHED:
+               flushCache(cache, processes[processIndex]->processPageTable);
 					break;
-
 				case ERR:
 					free(state.finishedArray);
 					freeCache(cache);
 					return 1;
-
 				case SUCCESS:
 					break;
 				}
 
-				runCacheSimulation(
-					 cache, cacheResults, cacheSimResults,
-					 currentTable->pages[affectedPages.addedIdx].phyAddr,
-					 entry.operation, parameters->replacementPolicy, parameters->blockSize);
+				unsigned int PPN = currentTable->pages[affectedPages.addedIdx].phyAddr;
+				unsigned int pageOffset = entry.virAddr & PAGE_OFFSET_MASK;
+
+				unsigned int phyAddr = (PPN << PAGE_OFFSET_BITS) | pageOffset;
+
+				runCacheSimulation(cache, cacheResults, cacheSimResults, phyAddr,
+										 entry.operation, parameters->replacementPolicy,
+										 parameters->blockSize);
 
 				if (entry.instructionComplete) {
 					instructionsExecutedThisSlice++;

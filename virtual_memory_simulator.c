@@ -1,10 +1,8 @@
 #include "virtual_memory_simulator.h"
+#include "cpu_cache.h"
 #include "page_table.h"
 #include "trace_parser.h"
 #include <stdlib.h>
-
-#define PAGE_OFFSET_BITS 12
-#define PAGE_OFFSET_MASK 0xFFF
 
 static int findVictimProcess(Process **processes, int *finishedArray,
 									  int numProcesses, int startIndex) {
@@ -30,7 +28,7 @@ runVirtualMemorySimulation(Process **processes, int processIndex,
 									MemoryCalculationResults *pgTableParameters,
 									int timeSlice, MemorySimulationResults *results,
 									MemoryState *state, TraceEntry entry,
-									int numProcesses, PagesAffected *pagesAffected) {
+									int numProcesses, PagesAffected *pagesAffected, Cache *cachePtr) {
 	Process *currentProcess;
 	PageTable *currentTable;
 
@@ -60,7 +58,7 @@ runVirtualMemorySimulation(Process **processes, int processIndex,
 		unsigned int physicalAddress;
 
 		results->pageHits++;
-
+		pagesAffected->addedIdx = entryIndex;
 		physicalPageNumber = currentTable->pages[entryIndex].phyAddr;
 		physicalAddress = ((unsigned int)physicalPageNumber << PAGE_OFFSET_BITS) |
 								(unsigned int)offset;
@@ -100,7 +98,6 @@ runVirtualMemorySimulation(Process **processes, int processIndex,
 			victimTable = victimProcess->processPageTable;
 
 			physicalPageNumber = victimTable->pages[0].phyAddr;
-
 			removedPageIndex =
 				 removePageByPhyAddr(physicalPageNumber, victimTable);
 			addPage(virtualPageNumber, physicalPageNumber, currentTable);

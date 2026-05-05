@@ -55,9 +55,9 @@ Cache *initCache(int associativity, CacheOutput cacheCalcResults) {
 }
 
 MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
-	int tag;
-	int index;
-	int offset;
+	unsigned int tag;
+	unsigned int index;
+	unsigned int offset;
 	int i;
 	bool foundEmpty = false;
 
@@ -70,8 +70,10 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 			*cacheCol = i;
 			return NO_MISS;
 		} else if (cachePtr->cacheBlocks[index][i].validbit == 0) {
-			*cacheCol = i;
-			foundEmpty = true;
+			if (!foundEmpty) {
+            *cacheCol = i;
+				foundEmpty = true;
+			}
 		}
 	}
 
@@ -81,7 +83,7 @@ MissType readCache(Cache *cachePtr, int phyAddr, int *cacheCol) {
 int flushCache(Cache *cachePtr, PageTable *processPtr) {
 	int i;
 	int currCacheCol;
-	int index;
+	unsigned int index;
 
 	if (cachePtr == NULL || processPtr == NULL) {
 		return 1;
