@@ -5,6 +5,7 @@
 
 #define LINE_BUF 4096
 #define EIP_ADDR_OFFSET 10
+#define EIP_SIZE_OFFSET 4
 #define ADDR_OFFSET 6
 #define DATA_OFFSET 15
 
@@ -56,13 +57,15 @@ int getNextTraceEntry(FILE *file, TraceEntry *entry) {
 
     {
         unsigned int instrAddr = 0;
+        unsigned int instrSize = 0;
 
-        if (sscanf(eipLine + EIP_ADDR_OFFSET, "%x", &instrAddr) != 1) {
+        if (sscanf(eipLine + EIP_SIZE_OFFSET, "(%u): %x", &instrSize, &instrAddr) != 2) {
             return 0;
         }
 
         entry->operation = 'R';
         entry->virAddr = (uint32_t)instrAddr;
+        entry->instructionSize = (int)instrSize;
         entry->instructionComplete = 1; /* changed below if dst/src exist */
     }
 

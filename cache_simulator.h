@@ -14,11 +14,12 @@ typedef struct {
 	int conflictMisses;
 	int capacityMisses;
 	int totalCycles;
-    int totalInstructions;
+	int totalInstructions;
 } CacheSimulationResults;
 
 MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
-									  CacheSimulationResults *results, unsigned int phyAddr,
-									  char instType, ReplacementPolicy policy, int blockSize);
+									 CacheSimulationResults *results,
+									 unsigned int phyAddr, char instType, int instSize,
+									 ReplacementPolicy policy, int blockSize);
 
 #endif

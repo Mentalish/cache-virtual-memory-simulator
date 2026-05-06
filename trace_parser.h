@@ -7,7 +7,8 @@
 typedef struct {
     char operation;              /* 'R' or 'W' */
     uint32_t virAddr;            /* virtual address */
-    int instructionComplete;     
+    int instructionComplete; 
+    int instructionSize;
 } TraceEntry;
 
 int getNextTraceEntry(FILE *file, TraceEntry *entry);
