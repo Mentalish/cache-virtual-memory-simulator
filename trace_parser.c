@@ -14,97 +14,100 @@ static int pendingCount = 0;
 static int pendingIndex = 0;
 
 static int isInvalid(const char *dataField) {
-    return strncmp(dataField, "--------", 8) == 0;
+	return strncmp(dataField, "--------", 8) == 0;
 }
 
 static int readLine(FILE *f, char *buf, int size) {
-    while (fgets(buf, size, f) != NULL) {
-        int len = (int)strlen(buf);
+	while (fgets(buf, size, f) != NULL) {
+		int len = (int)strlen(buf);
 
-        while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
-            buf[--len] = '\0';
-        }
+		while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
+			buf[--len] = '\0';
+		}
 
-        if (len > 0) {
-            return 1;
-        }
-    }
+		if (len > 0) {
+			return 1;
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 int getNextTraceEntry(FILE *file, TraceEntry *entry) {
-    char eipLine[LINE_BUF];
-    char dstLine[LINE_BUF];
+	char eipLine[LINE_BUF];
+	char dstLine[LINE_BUF];
 
-    if (pendingIndex < pendingCount) {
-        *entry = pending[pendingIndex++];
-        return 1;
-    }
+	if (pendingIndex < pendingCount) {
+		*entry = pending[pendingIndex++];
+		return 1;
+	}
 
-    pendingCount = 0;
-    pendingIndex = 0;
+	pendingCount = 0;
+	pendingIndex = 0;
 
-    while (1) {
-        if (!readLine(file, eipLine, LINE_BUF)) {
-            return 0;
-        }
+	while (1) {
+		if (!readLine(file, eipLine, LINE_BUF)) {
+			return 0;
+		}
 
-        if (strncmp(eipLine, "EIP", 3) == 0) {
-            break;
-        }
-    }
+		if (strncmp(eipLine, "EIP", 3) == 0) {
+			break;
+		}
+	}
 
-    {
-        unsigned int instrAddr = 0;
-        unsigned int instrSize = 0;
+	{
+		unsigned int instrAddr = 0;
+		unsigned int instrSize = 0;
 
-        if (sscanf(eipLine + EIP_SIZE_OFFSET, "(%u): %x", &instrSize, &instrAddr) != 2) {
-            return 0;
-        }
+		if (sscanf(eipLine + EIP_SIZE_OFFSET, "(%u): %x",
+					  &instrSize, &instrAddr) != 2) {
+			return 0;
+		}
 
-        entry->operation = 'R';
-        entry->virAddr = (uint32_t)instrAddr;
-        entry->instructionSize = (int)instrSize;
-        entry->instructionComplete = 1; /* changed below if dst/src exist */
-    }
+		entry->operation = 'R';
+		entry->virAddr = (uint32_t)instrAddr;
+		entry->instructionSize = (int)instrSize;
+		entry->isInstruction = 1;
+		entry->instructionComplete = 1;
+	}
 
-    if (!readLine(file, dstLine, LINE_BUF)) {
-        return 1;
-    }
+	if (!readLine(file, dstLine, LINE_BUF)) {
+		return 1;
+	}
 
-    if (strncmp(dstLine, "dstM", 4) == 0) {
-        unsigned int dstAddr = 0;
-        unsigned int srcAddr = 0;
-        char *dstPtr = strstr(dstLine, "dstM:");
-        char *srcPtr = strstr(dstLine, "srcM:");
+	if (strncmp(dstLine, "dstM", 4) == 0) {
+		unsigned int dstAddr = 0;
+		unsigned int srcAddr = 0;
+		char *dstPtr = strstr(dstLine, "dstM:");
+		char *srcPtr = strstr(dstLine, "srcM:");
 
-        /*read*/
-        if (!isInvalid(srcPtr + DATA_OFFSET)) {
-            if (sscanf(srcPtr + ADDR_OFFSET, "%x", &srcAddr) == 1) {
-                pending[pendingCount].operation = 'R';
-                pending[pendingCount].virAddr = (uint32_t)srcAddr;
-                pending[pendingCount].instructionComplete = 0;
-                pendingCount++;
-            }
-        }
+		if (!isInvalid(srcPtr + DATA_OFFSET)) {
+			if (sscanf(srcPtr + ADDR_OFFSET, "%x", &srcAddr) == 1) {
+				pending[pendingCount].operation = 'R';
+				pending[pendingCount].virAddr = (uint32_t)srcAddr;
+				pending[pendingCount].instructionSize = 4;
+				pending[pendingCount].isInstruction = 0;
+				pending[pendingCount].instructionComplete = 0;
+				pendingCount++;
+			}
+		}
 
+		if (!isInvalid(dstPtr + DATA_OFFSET)) {
+			if (sscanf(dstPtr + ADDR_OFFSET, "%x", &dstAddr) == 1) {
+				pending[pendingCount].operation = 'W';
+				pending[pendingCount].virAddr = (uint32_t)dstAddr;
+				pending[pendingCount].instructionSize = 4;
+				pending[pendingCount].isInstruction = 0;
+				pending[pendingCount].instructionComplete = 0;
+				pendingCount++;
+			}
+		}
 
-        /*write*/
-        if (!isInvalid(dstPtr + DATA_OFFSET)) {
-            if (sscanf(dstPtr + ADDR_OFFSET, "%x", &dstAddr) == 1) {
-                pending[pendingCount].operation = 'W';
-                pending[pendingCount].virAddr = (uint32_t)dstAddr;
-                pending[pendingCount].instructionComplete = 0;
-                pendingCount++;
-            }
-        }
-                
-        if (pendingCount > 0) {
-            entry->instructionComplete = 0;
-            pending[pendingCount - 1].instructionComplete = 1;
-        }
-    }
+		if (pendingCount > 0) {
+			entry->instructionComplete = 0;
+			pending[pendingCount - 1].instructionComplete = 1;
+		}
+	}
 
-    return 1;
+	return 1;
 }

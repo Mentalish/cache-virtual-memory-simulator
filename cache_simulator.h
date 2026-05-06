@@ -8,7 +8,7 @@
 
 typedef struct {
 	int totalAccesses;
-   int totalAddresses;
+	int totalAddresses;
 	int instructionBytes;
 	int destBytes;
 	int compulsoryMisses;
@@ -20,7 +20,8 @@ typedef struct {
 
 MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
 									 CacheSimulationResults *results,
-									 unsigned int phyAddr, char instType, int instSize,
+									 unsigned int phyAddr, char instType,
+									 int instSize, int isInstruction,
 									 ReplacementPolicy policy, int blockSize);
 
 #endif
