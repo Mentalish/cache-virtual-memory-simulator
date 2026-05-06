@@ -5,10 +5,11 @@
 #include <stdio.h>
 
 typedef struct {
-    char operation;              /* 'R' or 'W' */
-    uint32_t virAddr;            /* virtual address */
-    int instructionComplete; 
-    int instructionSize;
+	char operation;              /* 'R' or 'W' */
+	uint32_t virAddr;            /* virtual address */
+	int instructionComplete;     /* used for time quantum */
+	int instructionSize;         /* EIP size, data accesses = 4 */
+	int isInstruction;           /* 1 for EIP, 0 for src/dst */
 } TraceEntry;
 
 int getNextTraceEntry(FILE *file, TraceEntry *entry);
