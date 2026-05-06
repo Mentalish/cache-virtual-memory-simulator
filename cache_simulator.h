@@ -8,6 +8,7 @@
 
 typedef struct {
 	int totalAccesses;
+   int totalAddresses;
 	int instructionBytes;
 	int destBytes;
 	int compulsoryMisses;

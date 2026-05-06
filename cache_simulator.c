@@ -28,13 +28,22 @@ MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
 		return NO_MISS;
 	}
 
-	// check multi block instruction:
-   int blockOffset = 32 - (cachePtr->indexSize + cachePtr->tagSize);
+	results->totalInstructions++;
+	if (instType == 'R') {
+		results->instructionBytes += instSize;
+		results->totalCycles += 2;
+	} else {
+		results->destBytes += blockSize;
+		results->totalCycles += 1;
+	}
+
+	int blockOffset = 32 - (cachePtr->indexSize + cachePtr->tagSize);
 	unsigned int firstBlock = phyAddr >> blockOffset;
 	unsigned int lastBlock = (phyAddr + instSize) >> blockOffset;
-	results->totalAccesses++;
+	results->totalAddresses++;
 	for (unsigned int currentBlock = firstBlock; currentBlock <= lastBlock;
 		  currentBlock++) {
+		results->totalAccesses++;
 		unsigned int accessAddr = currentBlock << blockOffset;
 
 		parseAddress(accessAddr, &tag, &index, &offset, cacheParameters->tag_size,
@@ -47,15 +56,6 @@ MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
 		} else {
 			int memoryReads = (blockSize + 3) / 4;
 			results->totalCycles += 4 * memoryReads;
-		}
-
-		if (instType == 'R') {
-			results->instructionBytes += instSize;
-			results->totalInstructions++;
-			results->totalCycles += 2;
-		} else {
-			results->destBytes += instSize;
-			results->totalCycles += 1;
 		}
 
 		switch (missType) {
