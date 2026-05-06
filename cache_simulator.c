@@ -16,7 +16,7 @@ static void replaceCacheBlock(Cache *cachePtr, ReplacementPolicy policy,
 
 MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
 									 CacheSimulationResults *results,
-									 unsigned int phyAddr, char instType,
+									 unsigned int phyAddr, char instType, int instSize,
 									 ReplacementPolicy policy, int blockSize) {
 	MissType missType;
 	int cacheCol = 0;
@@ -28,48 +28,56 @@ MissType runCacheSimulation(Cache *cachePtr, CacheOutput *cacheParameters,
 		return NO_MISS;
 	}
 
-	parseAddress(phyAddr, &tag, &index, &offset, cacheParameters->tag_size,
-					 cacheParameters->index_size);
-
-	missType = readCache(cachePtr, phyAddr, &cacheCol);
-
-	if (missType == NO_MISS) {
-		results->totalCycles += 1;
-	} else {
-		int memoryReads = (blockSize + 3) / 4;
-		results->totalCycles += 4 * memoryReads;
-	}
-
-	results->totalAccesses++;
-
+	results->totalInstructions++;
 	if (instType == 'R') {
-		results->instructionBytes += blockSize;
-		results->totalInstructions++;
+		results->instructionBytes += instSize;
 		results->totalCycles += 2;
 	} else {
 		results->destBytes += blockSize;
 		results->totalCycles += 1;
 	}
 
-	switch (missType) {
-	case CONFLICT:
-		results->conflictMisses++;
-		replaceCacheBlock(cachePtr, policy, index, tag, offset);
-		break;
+	int blockOffset = 32 - (cachePtr->indexSize + cachePtr->tagSize);
+	unsigned int firstBlock = phyAddr >> blockOffset;
+	unsigned int lastBlock = (phyAddr + instSize) >> blockOffset;
+	results->totalAddresses++;
+	for (unsigned int currentBlock = firstBlock; currentBlock <= lastBlock;
+		  currentBlock++) {
+		results->totalAccesses++;
+		unsigned int accessAddr = currentBlock << blockOffset;
 
-	case COMPULSORY:
-		results->compulsoryMisses++;
-		cachePtr->cacheBlocks[index][cacheCol].tag = tag;
-		cachePtr->cacheBlocks[index][cacheCol].validbit = 1;
-		break;
+		parseAddress(accessAddr, &tag, &index, &offset, cacheParameters->tag_size,
+						 cacheParameters->index_size);
 
-	case CAPACITY:
-		results->capacityMisses++;
-		replaceCacheBlock(cachePtr, policy, index, tag, offset);
-		break;
+		missType = readCache(cachePtr, accessAddr, &cacheCol);
 
-	case NO_MISS:
-		break;
+		if (missType == NO_MISS) {
+			results->totalCycles += 1;
+		} else {
+			int memoryReads = (blockSize + 3) / 4;
+			results->totalCycles += 4 * memoryReads;
+		}
+
+		switch (missType) {
+		case CONFLICT:
+			results->conflictMisses++;
+			replaceCacheBlock(cachePtr, policy, index, tag, offset);
+			break;
+
+		case COMPULSORY:
+			results->compulsoryMisses++;
+			cachePtr->cacheBlocks[index][cacheCol].tag = tag;
+			cachePtr->cacheBlocks[index][cacheCol].validbit = 1;
+			break;
+
+		case CAPACITY:
+			results->capacityMisses++;
+			replaceCacheBlock(cachePtr, policy, index, tag, offset);
+			break;
+
+		case NO_MISS:
+			break;
+		}
 	}
 
 	return missType;

@@ -107,19 +107,20 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 						 (unsigned long long)currentTable->numPages;
 					state.finishedArray[processIndex] = 1;
 					state.finishedCount++;
-               flushCache(cache, currentTable);
+					flushCache(cache, currentTable);
 					break;
 				}
 
 				memStatus = runVirtualMemorySimulation(
 					 processes, processIndex, memResults, parameters->timeSlice,
-					 memSimResults, &state, entry, numProcesses, &affectedPages, cache);
+					 memSimResults, &state, entry, numProcesses, &affectedPages,
+					 cache);
 
 				switch (memStatus) {
 				case PROC_SKIP:
 					continue;
 				case PROC_FINISHED:
-               flushCache(cache, processes[processIndex]->processPageTable);
+					flushCache(cache, processes[processIndex]->processPageTable);
 					break;
 				case ERR:
 					free(state.finishedArray);
@@ -129,13 +130,15 @@ int runSimulation(Parameters *parameters, MemoryCalculationResults *memResults,
 					break;
 				}
 
-				unsigned int PPN = currentTable->pages[affectedPages.addedIdx].phyAddr;
+				unsigned int PPN =
+					 currentTable->pages[affectedPages.addedIdx].phyAddr;
 				unsigned int pageOffset = entry.virAddr & PAGE_OFFSET_MASK;
 
 				unsigned int phyAddr = (PPN << PAGE_OFFSET_BITS) | pageOffset;
 
 				runCacheSimulation(cache, cacheResults, cacheSimResults, phyAddr,
-										 entry.operation, parameters->replacementPolicy,
+										 entry.operation, entry.instructionSize,
+										 parameters->replacementPolicy,
 										 parameters->blockSize);
 
 				if (entry.instructionComplete) {
