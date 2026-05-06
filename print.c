@@ -179,7 +179,7 @@ void printCacheSimulationResults(CacheSimulationResults results,
 	printf("%-24s %.4f%%\n", "Miss Rate:", missRate);
 
 	printf("%-24s %.2f Cycles/Instruction  (%d)\n", "CPI:", cpi,
-			 results.totalCycles);
+			 results.totalInstructions);
 
 	printf("%-24s %.2f KB / %.2f KB = %.2f%%  Waste: $%.2f/chip\n",
 			 "Unused Cache Space:", unusedKB,
